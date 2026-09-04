@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《生物科学综合实验》人机协作课程建设方案</title>
+<!--
+  ============================================================
+  这份文件分三层，加内容只用碰下面两处，不用改样式
+
+  第 1 层 设计变量  :root{...}          改配色/字号/留白只用这里
+  第 2 层 版式组件  见 CSS "版式组件" 区块   panel / spec / kpi / issue / chips / timeline / bar / table
+  第 3 层 页面实例  <section class="slide">  每页一块，页码自动生成
+
+  【以后加一页，只做两步】
+  1. 复制任意一个 <section class="slide" id="..."> ... </section>，替换里面的文字
+  2. 在文件底部 PAGES 数组里加一行：{ id:'和 section 一致的 id', nav:'侧栏短标题' }
+  页码、进度条、底部导航、目录、打印分页全部自动跟上。
+
+  【想放真实照片】在 :root 里把 --cover-photo 改成
+      --cover-photo: url('assets/cover.jpg');
+  封面右侧就会显示图片（深色底自动叠加，文字依旧清晰）。
+  ============================================================
+-->
+<style>
+/* ============================================================
+   第 1 层 · 设计变量
+   ============================================================ */
+:root{
+  /* 主色：中大红 + 描金，用于深色页与强调 */
+  --brand:#8E1D26;
+  --brand-deep:#4E0F16;
+  --brand-ink:#2A070C;
+  --gold:#C9A45B;
+  --gold-soft:#E8D3A6;
+  /* 中性色：内容页 */
+  --paper:#FFFFFF;
+  --paper-2:#F6F6F4;
+  --ink:#16202A;
+  --ink-2:#4A5865;
+  --ink-3:#7C8892;
+  --line:rgba(22,32,42,.12);
+  --line-2:rgba(22,32,42,.22);
+  /* 语义色 */
+  --risk:#A6242C;
+  --ai:#1F5F73;
+  /* 字体 */
+  --font-sans:'Microsoft YaHei','微软雅黑','PingFang SC','Noto Sans SC',sans-serif;
+  --font-display:'Noto Serif SC','Source Han Serif SC','Microsoft YaHei','微软雅黑',serif;
+  /* 尺度 */
+  --stage-w:1600px;
+  --stage-h:900px;
+  --pad-x:64px;
+  --pad-y:56px;
+  --gap:22px;
+  --radius:10px;
+  --shadow:0 2px 10px rgba(22,32,42,.05),0 18px 40px rgba(22,32,42,.06);
+  /* 封面照片，留空则用深色纹理底 */
+  --cover-photo:none;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:var(--font-sans);color:var(--ink);}
+
+/* ============================================================
+   播放容器：16:9 舞台等比缩放，任何屏幕都不破版
+   ============================================================ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:54px 44px 78px;}
+#stage{position:relative;width:var(--stage-w);height:var(--stage-h);flex:none;transform-origin:center center;box-shadow:0 30px 80px rgba(0,0,0,.55);background:var(--paper);}
+
+.slide{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:var(--paper);
+  opacity:0;visibility:hidden;transform:translateX(46px) scale(.985);
+  transition:opacity .45s ease,transform .55s cubic-bezier(.22,.61,.36,1),visibility .55s;}
+.slide.is-active{opacity:1;visibility:visible;transform:none;z-index:2;}
+.slide.is-prev{transform:translateX(-46px) scale(.985);}
+
+/* ============================================================
+   第 2 层 · 版式组件（页面骨架）
+   ============================================================ */
+
+/* 页眉：眉标 + 主标题 + 结论引导线 */
+.slide-head{padding:var(--pad-y) var(--pad-x) 0;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;}
+.eyebrow{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:2.5px;color:var(--brand);font-weight:700;}
+.eyebrow::before{content:'';width:26px;height:2px;background:var(--gold);}
+.eyebrow .no{font-family:var(--font-display);font-size:15px;color:var(--ink-3);letter-spacing:1px;font-weight:400;}
+.slide-title{font-family:var(--font-display);font-size:44px;font-weight:700;line-height:1.2;letter-spacing:1px;margin-top:12px;color:var(--ink);}
+.slide-title em{font-style:normal;color:var(--brand);}
+.head-note{max-width:420px;text-align:right;font-size:15px;line-height:1.75;color:var(--ink-2);padding-bottom:6px;position:relative;}
+.head-note b{color:var(--brand);}
+.head-rule{height:1px;background:linear-gradient(90deg,var(--line-2) 0 62%,rgba(0,0,0,0));margin:22px var(--pad-x) 0;}
+
+/* 正文网格：给三种常用比例，够用 */
+.slide-body{padding:var(--gap) var(--pad-x) 0;height:calc(100% - var(--pad-y) - 148px);display:grid;gap:var(--gap);}
+.g-side{grid-template-columns:minmax(0,1fr) minmax(0,1.62fr);}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.col{display:flex;flex-direction:column;gap:var(--gap);min-width:0;}
+
+/* 结论条：每页一句给决策人的话 */
+.take{position:absolute;left:0;right:0;bottom:0;height:76px;display:flex;align-items:center;gap:16px;
+  padding:0 var(--pad-x);background:var(--paper-2);border-top:1px solid var(--line);}
+.take-label{flex:none;font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:2px;color:#fff;background:var(--brand);padding:6px 12px;border-radius:4px;}
+.take p{font-size:18px;line-height:1.5;color:var(--ink);letter-spacing:.5px;}
+.take p b{color:var(--brand);}
+
+/* 页码（自动生成，不用手写） */
+.page-num{position:absolute;right:var(--pad-x);bottom:22px;font-family:var(--font-display);font-size:14px;letter-spacing:2px;color:var(--ink-3);z-index:6;}
+.page-num i{font-style:normal;color:var(--brand);font-weight:700;}
+
+/* ============================================================
+   第 2 层 · 版式组件（内容块）
+   ============================================================ */
+
+/* 面板：内容页的基本容器 */
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);min-width:0;}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:17px;font-weight:700;color:var(--ink);letter-spacing:1px;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line);}
+.panel-title span:last-child{font-size:12px;font-weight:400;letter-spacing:1.5px;color:var(--ink-3);}
+
+/* 条目表：左值右文 */
+.spec{display:grid;grid-template-columns:76px 1fr;gap:11px 16px;font-size:15.5px;line-height:1.5;}
+.spec dt{color:var(--ink-3);letter-spacing:1px;}
+.spec dd{color:var(--ink);font-weight:600;}
+
+/* 关键数字 */
+.kpi-row{display:flex;gap:10px;margin-top:20px;}
+.kpi{flex:1;background:var(--paper-2);border-radius:8px;padding:12px 10px;text-align:center;border-top:2px solid var(--gold);}
+.kpi b{display:block;font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--brand);line-height:1.1;}
+.kpi span{display:block;margin-top:5px;font-size:12px;color:var(--ink-2);letter-spacing:1px;}
+
+/* 引文 / 说明块 */
+.note{border-left:2px solid var(--gold);padding:4px 0 4px 14px;font-size:14.5px;line-height:1.8;color:var(--ink-2);}
+.note b{color:var(--ink);}
+
+/* 问题卡：编号 + 标题 + 标签 */
+.issue{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px 18px 76px;box-shadow:var(--shadow);}
+.issue-no{position:absolute;left:22px;top:19px;font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--gold);line-height:1;}
+.issue-h{font-size:19px;font-weight:700;color:var(--ink);letter-spacing:.5px;line-height:1.35;}
+.issue-h s{text-decoration:none;color:var(--risk);}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.chip{font-size:14px;line-height:1;padding:8px 12px;border-radius:999px;background:#F4EEEF;color:var(--risk);border:1px solid rgba(166,36,44,.16);letter-spacing:.5px;}
+.chip--ai{background:#EDF3F5;color:var(--ai);border-color:rgba(31,95,115,.16);}
+.issue p{margin-top:10px;font-size:15px;line-height:1.75;color:var(--ink-2);}
+
+/* 列表 */
+.list{list-style:none;font-size:15px;line-height:1.75;color:var(--ink-2);}
+.list li{position:relative;padding-left:16px;}
+.list li::before{content:'';position:absolute;left:0;top:.72em;width:6px;height:6px;border-radius:50%;background:var(--gold);}
+.list li b{color:var(--ink);}
+
+/* 时间轴：用于建设路径、阶段规划 */
+.timeline{display:grid;gap:14px;}
+.tl{position:relative;padding-left:26px;}
+.tl::before{content:'';position:absolute;left:6px;top:6px;bottom:-14px;width:1px;background:var(--line-2);}
+.tl:last-child::before{display:none;}
+.tl::after{content:'';position:absolute;left:0;top:5px;width:13px;height:13px;border-radius:50%;background:var(--paper);border:2px solid var(--brand);}
+.tl h5{font-size:16.5px;font-weight:700;color:var(--ink);letter-spacing:.5px;}
+.tl p{font-size:14.5px;line-height:1.7;color:var(--ink-2);margin-top:4px;}
+
+/* 条形数据 */
+.bar{display:grid;grid-template-columns:96px 1fr 52px;align-items:center;gap:12px;font-size:14.5px;color:var(--ink-2);}
+.bar-track{height:8px;border-radius:99px;background:var(--paper-2);overflow:hidden;}
+.bar-fill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand-deep),var(--brand));}
+.bar-val{text-align:right;font-family:var(--font-display);font-weight:700;color:var(--brand);}
+
+/* 表格 */
+.table{width:100%;border-collapse:collapse;font-size:14.5px;}
+.table th{background:var(--brand);color:#fff;font-weight:600;letter-spacing:1px;padding:10px 12px;text-align:left;}
+.table td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink-2);}
+.table tr:nth-child(even) td{background:var(--paper-2);}
+.table td b{color:var(--ink);}
+
+/* ============================================================
+   第 3 层 · 封面（深色版式）
+   ============================================================ */
+.cover{background:
+    radial-gradient(120% 90% at 78% 8%,rgba(201,164,91,.16),rgba(0,0,0,0) 55%),
+    linear-gradient(122deg,var(--brand-ink) 0%,var(--brand-deep) 46%,var(--brand) 100%);
+  color:#F6EFE3;}
+.cover::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,rgba(0,0,0,0) 1px 46px);opacity:.5;}
+.cover-media{position:absolute;right:0;top:0;bottom:0;width:38%;background-image:var(--cover-photo);background-size:cover;background-position:center;}
+.cover-media::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--brand-deep) 0%,rgba(78,15,22,.72) 34%,rgba(78,15,22,.24) 68%,rgba(42,7,12,.42) 100%);}
+.cover-topline{position:absolute;left:0;top:0;right:0;height:4px;z-index:6;background:linear-gradient(90deg,var(--gold) 0%,var(--gold-soft) 40%,rgba(232,211,166,0) 88%);}
+.cover-motto{position:absolute;left:34px;top:64px;bottom:64px;z-index:6;writing-mode:vertical-rl;font-family:var(--font-display);
+  font-size:16px;letter-spacing:12px;color:rgba(232,211,166,.62);}
+.cover-inner{position:absolute;left:0;top:0;z-index:6;display:flex;align-items:flex-start;justify-content:space-between;width:100%;padding:30px var(--pad-x) 0 96px;}
+.cover-org{font-size:14.5px;letter-spacing:3px;color:rgba(246,239,227,.72);}
+.cover-badge{font-size:13px;letter-spacing:2px;color:var(--gold-soft);border:1px solid rgba(201,164,91,.4);border-radius:999px;padding:7px 16px;}
+.cover-main{position:absolute;left:96px;right:34%;top:50%;transform:translateY(-46%);z-index:6;}
+.cover-kicker{display:inline-block;font-size:15px;letter-spacing:4px;color:var(--gold-soft);border-bottom:1px solid rgba(201,164,91,.45);padding-bottom:8px;}
+.cover-title{margin-top:26px;font-family:var(--font-display);font-size:82px;font-weight:700;line-height:1.14;letter-spacing:2px;color:#FBF5EA;text-shadow:0 6px 30px rgba(0,0,0,.35);}
+.cover-sub{margin-top:18px;font-family:var(--font-display);font-size:40px;font-weight:600;letter-spacing:6px;color:var(--gold);}
+.cover-rule{width:96px;height:3px;margin-top:34px;background:linear-gradient(90deg,var(--gold),rgba(201,164,91,.15));}
+.cover-lead{margin-top:26px;max-width:560px;font-size:19px;line-height:1.9;color:rgba(246,239,227,.82);letter-spacing:.5px;}
+.cover-foot{position:absolute;left:96px;right:34%;bottom:54px;z-index:6;display:flex;align-items:center;gap:26px;font-size:16px;letter-spacing:1.5px;color:rgba(246,239,227,.8);}
+.cover-foot b{font-weight:700;color:#FBF5EA;}
+.cover-foot i{font-style:normal;color:var(--gold);}
+.cover-spine{position:absolute;right:var(--pad-x);top:50%;transform:translateY(-50%);z-index:6;width:210px;text-align:right;}
+.cover-spine div{display:flex;justify-content:flex-end;gap:14px;padding:12px 0;border-bottom:1px solid rgba(232,211,166,.16);font-size:14px;letter-spacing:1px;}
+.cover-spine span{color:rgba(246,239,227,.5);}
+.cover-spine b{color:var(--gold-soft);font-weight:600;}
+.btn-start{margin-top:0;align-self:flex-start;display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-family:inherit;
+  font-size:16px;font-weight:600;letter-spacing:2px;color:var(--brand-ink);background:linear-gradient(135deg,var(--gold-soft),var(--gold));
+  border:none;border-radius:999px;padding:14px 26px;transition:transform .2s ease,box-shadow .2s ease;box-shadow:0 10px 26px rgba(0,0,0,.28);}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(0,0,0,.34);}
+.btn-start svg{width:16px;height:16px;}
+
+/* ============================================================
+   播放器外框（不进 PDF，只服务屏幕）
+   ============================================================ */
+.chrome{position:fixed;z-index:20;font-family:var(--font-sans);}
+#bar-top{left:0;top:0;width:100%;height:2px;background:rgba(255,255,255,.08);}
+#bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--gold));transition:width .5s cubic-bezier(.22,.61,.36,1);}
+#brandmark{right:44px;top:24px;display:flex;align-items:center;gap:12px;font-size:12.5px;letter-spacing:2px;color:rgba(255,255,255,.42);}
+#brandmark::before{content:'';width:22px;height:1px;background:rgba(255,255,255,.28);}
+#sec-label{left:44px;bottom:30px;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,.5);}
+#sec-label b{color:var(--gold);font-family:var(--font-display);font-weight:700;margin-right:10px;}
+#dots{left:50%;bottom:32px;transform:translateX(-50%);display:flex;align-items:center;gap:7px;}
+.dot{width:22px;height:4px;border-radius:99px;border:none;cursor:pointer;background:rgba(255,255,255,.2);padding:0;transition:all .3s ease;}
+.dot:hover{background:rgba(255,255,255,.45);}
+.dot.on{width:44px;background:linear-gradient(90deg,var(--brand),var(--gold));}
+#ctrls{right:44px;bottom:22px;display:flex;align-items:center;gap:10px;}
+#count{font-family:var(--font-display);font-size:14px;letter-spacing:2px;color:rgba(255,255,255,.55);margin-right:6px;}
+#count b{color:#fff;font-weight:700;}
+.cbtn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;}
+.cbtn:hover:not(:disabled){background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.34);}
+.cbtn:disabled{opacity:.24;cursor:default;}
+.cbtn svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ============================================================
+   响应式 / 无障碍 / 打印
+   ============================================================ */
+@media (max-width:820px){
+  #viewport{padding:38px 12px 62px;}
+  .cover-title{font-size:64px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide,.dot,.btn-start,.cbtn{transition:none;}
+}
+@page{size:256mm 144mm;margin:0;}
+@media print{
+  html,body{overflow:visible;background:#fff;height:auto;}
+  #viewport{position:static;display:block;padding:0;}
+  .chrome{display:none!important;}
+  #stage{width:auto;height:auto;transform:none!important;box-shadow:none;zoom:.605;}
+  .slide{position:relative;opacity:1;visibility:visible;transform:none;page-break-after:always;break-inside:avoid;margin:0 auto;}
+}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+ <div id="stage">
+
+  <!-- ========== 第 1 页 · 封面 ========== -->
+  <section class="slide cover" id="cover">
+    <div class="cover-media"></div>
+    <div class="cover-topline"></div>
+    <div class="cover-motto">博学 审问 慎思 明辨 笃行</div>
+
+    <div class="cover-inner">
+      <div class="cover-org">中山大学 · 超星集团　课程共建</div>
+      <div class="cover-badge">方案汇报</div>
+    </div>
+
+    <div class="cover-main">
+      <div class="cover-kicker">人机协作课程建设</div>
+      <h1 class="cover-title">生物科学<br>综合实验</h1>
+      <div class="cover-sub">建设方案汇报</div>
+      <div class="cover-rule"></div>
+      <p class="cover-lead">以 AI 知识库、多模态智能体与全过程数据评价，重构 108 学时的专业核心实验课。</p>
+      <button class="btn-start" onclick="go(1)">进入方案
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <div class="cover-spine">
+      <div><span>课程性质</span><b>专业必修课</b></div>
+      <div><span>学分 / 课时</span><b>3 / 108</b></div>
+      <div><span>汇报人</span><b>吴佳梦</b></div>
+      <div><span>时间</span><b>2026.09</b></div>
+    </div>
+  </section>
+
+  <!-- ========== 第 2 页 · 课前诊断 ========== -->
+  <section class="slide" id="diagnosis">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">01</span>课前诊断 · 现状分析</div>
+        <h2 class="slide-title">三个短板，<em>共同指向同一件事</em></h2>
+      </div>
+      <p class="head-note">《生物科学综合实验》是生物科学专业<b>学时规模最大的核心实验课</b>，也是人机协作教学改革的最佳切入点。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <!-- 左：课程基本盘 -->
+      <div class="col">
+        <div class="panel" style="flex:none;">
+          <div class="panel-title"><span>课程基本盘</span><span>COURSE INFO</span></div>
+          <dl class="spec">
+            <dt>课程名称</dt><dd>生物科学综合实验</dd>
+            <dt>开设学期</dt><dd>本科第三学年</dd>
+            <dt>课程性质</dt><dd>专业必修课</dd>
+            <dt>学分 / 课时</dt><dd>3 学分 / 108 课时</dd>
+          </dl>
+          <div class="kpi-row">
+            <div class="kpi"><b>3</b><span>学分</span></div>
+            <div class="kpi"><b>108</b><span>课时</span></div>
+            <div class="kpi"><b>Y3</b><span>第三学年</span></div>
+          </div>
+        </div>
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>培养目标</span><span>OBJECTIVE</span></div>
+          <p class="note">培养学生获取知识、解决问题的<b>实践技能</b>与<b>综合素养</b>，养成学习好习惯，具备<b>学术道德</b>与<b>学术进取精神</b>。</p>
+        </div>
+      </div>
+
+      <!-- 右：三项诊断 -->
+      <div class="col">
+        <div class="issue">
+          <div class="issue-no">01</div>
+          <div class="issue-h">教学内容组织较为薄弱</div>
+          <div class="chips"><span class="chip">AI 知识库建设薄弱</span><span class="chip">多维知识图谱建设薄弱</span></div>
+        </div>
+        <div class="issue">
+          <div class="issue-no">02</div>
+          <div class="issue-h">人机协作体系尚未成型</div>
+          <div class="chips">
+            <span class="chip chip--ai">多模态 AI 智能体融入不足</span>
+            <span class="chip chip--ai">智能体未覆盖各学习环节</span>
+            <span class="chip">任务引擎学习活动吸引力不足</span>
+            <span class="chip">沉浸式学习场景有待提升</span>
+          </div>
+        </div>
+        <div class="issue">
+          <div class="issue-no">03</div>
+          <div class="issue-h">课程评价体系仍需优化与落地</div>
+          <p>评价维度、评价方式及数据反馈机制有待进一步完善，尚未形成"教学评"闭环。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="take">
+      <div class="take-label">结论</div>
+      <p>问题不在单点，而在于<b>内容资产、智能体融入、评价闭环</b>三处尚未打通，这正是本方案的主攻方向。</p>
+    </div>
+  </section>
+
+ </div>
+</div>
+
+<!-- 播放器外框 -->
+<div class="chrome" id="bar-top"><div id="bar-fill"></div></div>
+<div class="chrome" id="brandmark">中山大学 · 超星集团</div>
+<div class="chrome" id="sec-label"></div>
+<nav class="chrome" id="dots" aria-label="页面导航"></nav>
+<div class="chrome" id="ctrls">
+  <div id="count"></div>
+  <button class="cbtn" id="prevBtn" onclick="go(-1)" title="上一页（←）" aria-label="上一页">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="cbtn" id="nextBtn" onclick="go(1)" title="下一页（→）" aria-label="下一页">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+  <button class="cbtn" id="fsBtn" onclick="fs()" title="全屏（F）" aria-label="全屏">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+  </button>
+  <button class="cbtn" onclick="window.print()" title="打印 / 导出 PDF" aria-label="打印">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>
+  </button>
+</div>
+
+<script>
+/* ============================================================
+   页面注册表：加一页只需在这里补一行（id 与 section 保持一致）
+   ============================================================ */
+var PAGES = [
+  { id:'cover',      nav:'封面' },
+  { id:'diagnosis',  nav:'课前诊断 · 现状分析' }
+];
+
+(function(){
+  var slides = [], i;
+  for (i = 0; i < PAGES.length; i++) {
+    var el = document.getElementById(PAGES[i].id);
+    if (el) { el.classList.add('slide'); slides.push(el); }
+  }
+  var total = slides.length;
+  // 页码自动写入，避免手写编号对不上
+  for (i = 0; i < total; i++) {
+    var num = document.createElement('div');
+    num.className = 'page-num';
+    num.innerHTML = '<i>' + pad(i + 1) + '</i> / ' + pad(total);
+    slides[i].appendChild(num);
+  }
+  var dots = document.getElementById('dots');
+  for (i = 0; i < total; i++) {
+    var d = document.createElement('button');
+    d.className = 'dot';
+    d.title = pad(i + 1) + ' ' + (PAGES[i].nav || '');
+    d.setAttribute('aria-label', d.title);
+    d.onclick = (function(n){ return function(){ show(n); }; })(i);
+    dots.appendChild(d);
+  }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function fit(){
+    var vp = document.getElementById('viewport');
+    var s = Math.min((vp.clientWidth - 0) / 1600, (vp.clientHeight - 0) / 900);
+    document.getElementById('stage').style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('beforeprint', fit);
+
+  var current = -1;
+  window.show = function(n){
+    n = Math.max(0, Math.min(total - 1, n));
+    if (n === current) return;
+    for (var k = 0; k < total; k++) {
+      slides[k].classList.toggle('is-active', k === n);
+      slides[k].classList.toggle('is-prev', k < n);
+      dots.children[k].classList.toggle('on', k === n);
+    }
+    current = n;
+    document.getElementById('prevBtn').disabled = (n === 0);
+    document.getElementById('nextBtn').disabled = (n === total - 1);
+    document.getElementById('bar-fill').style.width = ((n + 1) / total * 100) + '%';
+    document.getElementById('count').innerHTML = '<b>' + pad(n + 1) + '</b> / ' + pad(total);
+    document.getElementById('sec-label').innerHTML = '<b>' + pad(n + 1) + '</b>' + (PAGES[n].nav || '');
+    if (history.replaceState) history.replaceState(null, '', '#' + (n + 1));
+  };
+  window.go = function(dir){ show(current + dir); };
+  window.fs = function(){
+    var d = document;
+    if (d.fullscreenElement) { d.exitFullscreen && d.exitFullscreen(); }
+    else { d.documentElement.requestFullscreen && d.documentElement.requestFullscreen(); }
+  };
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key === 'f' || e.key === 'F') fs();
+  });
+  // 触屏滑动翻页
+  var x0 = null;
+  document.getElementById('stage').addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+  document.getElementById('stage').addEventListener('touchend', function(e){
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 46) go(dx < 0 ? 1 : -1);
+    x0 = null;
+  }, {passive:true});
+
+  fit();
+  var h = parseInt((location.hash || '').replace('#',''), 10);
+  show(isNaN(h) ? 0 : h - 1);
+})();
+</script>
+
+</body>
+</html>

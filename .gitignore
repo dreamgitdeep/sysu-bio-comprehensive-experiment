@@ -1,0 +1,17 @@
+# 系统与编辑器临时文件
+debug.log
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.tmp
+~$*
+
+# 本地备份与快照（git 历史本身就是版本，如需入库请注释掉本段）
+_原始备份.html
+*滚动版备份.html
+*deck-backup-*.html
+versions/
+
+# 素材原文体积较大时，可取消下一行注释改为只同步成品
+# 素材文本/

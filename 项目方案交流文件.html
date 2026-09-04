@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《生物科学综合实验》人机协作课程建设方案</title>
+<!--
+  ============================================================
+  这份文件分三层，加内容只用碰下面两处，不用改样式
+
+  第 1 层 设计变量  :root{...}                改配色/字号/留白只用这里
+  第 2 层 版式组件  见 CSS "版式组件" 区块      panel / spec / kpi / issue / chips / timeline / table / list
+  第 3 层 页面实例  <section class="slide">    每页一块，页码自动生成
+
+  【以后加一页，只做两步】
+  1. 复制任意一个 <section class="slide" id="..."> ... </section>，替换里面的文字
+  2. 在文件底部 PAGES 数组里加一行：{ id:'和 section 一致的 id', nav:'底部短标题' }
+  页码、进度条、底部导航、打印分页全部自动跟上。
+
+  【更省事】同目录自带工具：在文件夹地址栏输入 cmd 回车，然后
+      deck.cmd check                     体检：列出每页剩余"待填"占位
+      deck.cmd new -Id xx -Title "标题" -Nav "短标题" -After 某页id
+                                         新增一页（自动注册页码/导航/序号）
+      deck.cmd snap                      发给对方前存一份快照到 versions\
+  【操作】← / → 或空格翻页；F 全屏；底部圆点跳页；打印机按钮可导出 PDF。
+  ============================================================
+-->
+<style>
+/* ============================================================
+   第 1 层 · 设计变量
+   ============================================================ */
+:root{
+  /* 主色：中大红 + 描金，用于深色页与强调 */
+  --brand:#8E1D26;
+  --brand-deep:#4E0F16;
+  --brand-ink:#2A070C;
+  --gold:#C9A45B;
+  --gold-soft:#E8D3A6;
+  /* 中性色：内容页 */
+  --paper:#FFFFFF;
+  --paper-2:#F6F6F4;
+  --ink:#000000;
+  --ink-2:#000000;
+  --ink-3:#000000;
+  --line:rgba(22,32,42,.12);
+  --line-2:rgba(22,32,42,.22);
+  /* 语义色 */
+  --risk:#A6242C;
+  --ai:#1F5F73;
+  /* 字体 */
+  --font-sans:'Microsoft YaHei','微软雅黑','PingFang SC','Noto Sans SC',sans-serif;
+  --font-display:'Noto Serif SC','Source Han Serif SC','Microsoft YaHei','微软雅黑',serif;
+  /* 尺度 */
+  --stage-w:1600px;
+  --stage-h:900px;
+  --pad-x:64px;
+  --pad-y:56px;
+  --gap:22px;
+  --radius:10px;
+  --shadow:0 2px 10px rgba(22,32,42,.05),0 18px 40px rgba(22,32,42,.06);
+  /* 封面照片，留空则用深色纹理底 */
+  --cover-photo:none;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:var(--font-sans);color:var(--ink);}
+
+/* ============================================================
+   播放容器：16:9 舞台等比缩放，任何屏幕都不破版
+   ============================================================ */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:54px 44px 78px;}
+#stage{position:relative;width:var(--stage-w);height:var(--stage-h);flex:none;transform-origin:center center;box-shadow:0 30px 80px rgba(0,0,0,.55);background:var(--paper);}
+
+.slide{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:var(--paper);
+  opacity:0;visibility:hidden;transform:translateX(46px) scale(.985);
+  transition:opacity .45s ease,transform .55s cubic-bezier(.22,.61,.36,1),visibility .55s;}
+.slide.is-active{opacity:1;visibility:visible;transform:none;z-index:2;}
+.slide.is-prev{transform:translateX(-46px) scale(.985);}
+
+/* ============================================================
+   第 2 层 · 版式组件（页面骨架）
+   ============================================================ */
+
+/* 页眉：眉标 + 主标题 + 右侧引导语 */
+.slide-head{padding:var(--pad-y) var(--pad-x) 0;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;}
+.eyebrow{display:flex;align-items:center;gap:10px;font-size:18px;letter-spacing:2.5px;color:var(--brand);font-weight:700;}
+.eyebrow::before{content:'';width:26px;height:2px;background:var(--gold);}
+.eyebrow .no{font-family:var(--font-display);font-size:18px;color:var(--ink-3);letter-spacing:1px;font-weight:400;}
+.slide-title{font-family:var(--font-display);font-size:44px;font-weight:700;line-height:1.2;letter-spacing:1px;margin-top:12px;color:var(--ink);}
+.slide-title em{font-style:normal;color:var(--brand);}
+.head-note{max-width:420px;text-align:right;font-size:19px;line-height:1.75;color:var(--ink-2);padding-bottom:6px;position:relative;}
+.head-note b{color:var(--brand);}
+.head-rule{height:1px;background:linear-gradient(90deg,var(--line-2) 0 62%,rgba(0,0,0,0));margin:22px var(--pad-x) 0;}
+
+/* 正文网格：给三种常用比例，够用 */
+.slide-body{padding:var(--gap) var(--pad-x) 0;height:calc(100% - var(--pad-y) - 168px);display:grid;gap:var(--gap);}
+.g-side{grid-template-columns:minmax(0,1fr) minmax(0,1.62fr);}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.col{display:flex;flex-direction:column;gap:var(--gap);min-width:0;}
+
+/* 结论条：每页一句给交流对象的话 */
+.take{position:absolute;left:0;right:0;bottom:0;height:76px;display:flex;align-items:center;gap:16px;
+  padding:0 var(--pad-x);background:var(--paper-2);border-top:1px solid var(--line);}
+.take-label{flex:none;font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:2px;color:#fff;background:var(--brand);padding:6px 12px;border-radius:4px;}
+.take p{font-size:18px;line-height:1.5;color:var(--ink);letter-spacing:.5px;}
+.take p b{color:var(--brand);}
+
+/* 页码（自动生成，不用手写） */
+.page-num{position:absolute;right:var(--pad-x);bottom:22px;font-family:var(--font-display);font-size:18px;letter-spacing:2px;color:var(--ink-3);z-index:6;}
+.page-num i{font-style:normal;color:var(--brand);font-weight:700;}
+
+/* ============================================================
+   第 2 层 · 版式组件（内容块）
+   ============================================================ */
+
+/* 面板：内容页的基本容器 */
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);min-width:0;}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:28px;font-weight:700;color:var(--ink);letter-spacing:1px;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line);}
+.panel-title span:last-child{font-size:18px;font-weight:400;letter-spacing:1.5px;color:var(--ink-3);}
+
+/* 条目表：左值右文 */
+.spec{display:grid;grid-template-columns:140px 1fr;gap:12px 18px;font-size:25px;line-height:1.5;}
+.spec dt{color:var(--ink-3);letter-spacing:1px;}
+.spec dd{color:var(--ink);font-weight:600;}
+
+/* 关键数字 */
+.kpi-row{display:flex;gap:10px;margin-top:20px;}
+.kpi{flex:1;background:var(--paper-2);border-radius:8px;padding:12px 10px;text-align:center;border-top:2px solid var(--gold);}
+.kpi b{display:block;font-family:var(--font-display);font-size:32px;font-weight:700;color:var(--brand);line-height:1.1;}
+.kpi span{display:block;margin-top:6px;font-size:18px;color:var(--ink-2);letter-spacing:1px;}
+
+/* 引文 / 说明块 */
+.note{border-left:2px solid var(--gold);padding:4px 0 4px 14px;font-size:20px;line-height:1.75;color:var(--ink-2);}
+.note b{color:var(--ink);}
+
+/* 问题卡：编号 + 标题 + 标签 */
+.issue{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px 18px 76px;box-shadow:var(--shadow);}
+.issue-no{position:absolute;left:22px;top:19px;font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--gold);line-height:1;}
+.issue-h{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:.5px;line-height:1.35;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.chip{font-size:18px;line-height:1;padding:11px 18px;border-radius:999px;background:#F4EEEF;color:var(--risk);border:1px solid rgba(166,36,44,.16);letter-spacing:.5px;}
+.chip--ai{background:#EDF3F5;color:var(--ai);border-color:rgba(31,95,115,.16);}
+.chip--gold{background:#F8F1E2;color:#7A5C1E;border-color:rgba(201,164,91,.4);}
+.issue p{margin-top:10px;font-size:20px;line-height:1.75;color:var(--ink-2);}
+.issue--red{background:#FBF4F4;border-color:rgba(166,36,44,.16);}
+.issue--blue{background:#F1F6F8;border-color:rgba(31,95,115,.16);}
+.issue--gold{background:#FAF5EA;border-color:rgba(201,164,91,.32);}
+
+/* 列表 */
+.list{list-style:none;font-size:20px;line-height:1.75;color:var(--ink-2);}
+.list li{position:relative;padding-left:16px;}
+.list li::before{content:'';position:absolute;left:0;top:.72em;width:6px;height:6px;border-radius:50%;background:var(--gold);}
+.list li b{color:var(--ink);}
+.list--lg{font-size:21px;line-height:1.8;}
+.list--lg li{padding-left:18px;margin-bottom:16px;}
+
+/* 时间轴：用于建设路径、阶段规划、流程闭环 */
+.timeline{display:grid;gap:14px;}
+.tl{position:relative;padding-left:26px;}
+.tl::before{content:'';position:absolute;left:6px;top:6px;bottom:-14px;width:1px;background:var(--line-2);}
+.tl:last-child::before{display:none;}
+.tl::after{content:'';position:absolute;left:0;top:5px;width:13px;height:13px;border-radius:50%;background:var(--paper);border:2px solid var(--brand);}
+.tl h5{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:.5px;}
+.tl p{font-size:19px;line-height:1.7;color:var(--ink-2);margin-top:4px;}
+
+/* 表格 */
+.table{width:100%;border-collapse:collapse;font-size:19px;}
+.table th{background:var(--brand);color:#fff;font-weight:600;letter-spacing:1px;padding:12px 14px;text-align:left;}
+.table td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink-2);line-height:1.6;}
+.table tr:nth-child(even) td{background:var(--paper-2);}
+.table td b{color:var(--ink);}
+
+/* 案例图位：图片放入 案例图片\ 后，把 shot 内容换成 <img src="案例图片/xxx.jpg" alt="案例"> 即可，支持点击放大 */
+.shots{display:flex;gap:14px;height:100%;min-height:120px;}
+.shot{flex:1;min-width:0;border:1px dashed var(--line-2);border-radius:8px;background:var(--paper-2);
+  display:flex;align-items:center;justify-content:center;text-align:center;font-size:18px;line-height:1.7;color:var(--ink-3);}
+.shot img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in;}
+
+/* 诊断→建设 横排映射卡 */
+.map3{display:flex;gap:14px;height:calc(100% - 54px);}
+.map3 .m{flex:1;min-width:0;background:var(--paper-2);border-radius:8px;padding:16px 18px;border-top:2px solid var(--gold);}
+.map3 h6{font-size:18px;font-weight:700;color:var(--ink-2);letter-spacing:.5px;}
+.map3 p{margin-top:10px;font-size:20px;line-height:1.6;color:var(--ink);}
+.map3 b{color:var(--brand);}
+
+/* 案例跳转链接 */
+.linkbtn{display:inline-block;padding:9px 20px;border-radius:999px;background:#F1F6F8;color:var(--ai);
+  font-size:18px;font-weight:600;letter-spacing:.5px;text-decoration:none;border:1px solid rgba(31,95,115,.22);transition:all .18s ease;}
+.linkbtn:hover{background:var(--ai);color:#fff;}
+
+/* 图片轮播 */
+.carousel{position:relative;height:calc(100% - 54px);border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper-2);}
+.carousel .slides{position:absolute;inset:0;display:flex;transition:transform .55s cubic-bezier(.22,.61,.36,1);}
+.carousel .slide-item{flex:0 0 100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--ink);background:var(--paper);}
+.carousel .slide-item img{width:100%;height:100%;object-fit:contain;cursor:zoom-in;}
+.c-nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:none;
+  background:rgba(0,0,0,.35);color:#fff;font-size:20px;line-height:1;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;}
+.c-nav:hover{background:var(--brand);}
+.c-nav.prev{left:14px;} .c-nav.next{right:14px;}
+.c-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3;}
+.c-dots i{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.25);cursor:pointer;}
+.c-dots i.on{background:var(--brand);}
+#lightbox{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+  background:rgba(10,14,18,.88);cursor:zoom-out;padding:40px;}
+#lightbox.show{display:flex;}
+#lightbox img{max-width:88%;max-height:88%;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+
+/* ============================================================
+   第 3 层 · 封面（深色版式）
+   ============================================================ */
+.cover{background:
+    radial-gradient(120% 90% at 76% 6%,rgba(201,164,91,.16),rgba(0,0,0,0) 55%),
+    radial-gradient(90% 70% at 8% 102%,rgba(142,29,38,.26),rgba(0,0,0,0) 62%),
+    linear-gradient(128deg,#0B0F14 0%,#12181F 48%,#1B2430 100%);
+  color:#F6EFE3;}
+.cover::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 1px,rgba(0,0,0,0) 1px 46px);opacity:.4;}
+.cover-topline{position:absolute;left:0;top:0;right:0;height:4px;z-index:6;background:linear-gradient(90deg,var(--gold) 0%,var(--gold-soft) 40%,rgba(232,211,166,0) 88%);}
+.cover-inner{position:absolute;left:0;top:0;z-index:6;display:flex;align-items:center;justify-content:flex-end;width:100%;padding:34px var(--pad-x);}
+.cover-date{font-size:18px;letter-spacing:2px;color:rgba(246,239,227,.55);}
+.cover-main{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:6;width:min(1120px,86%);text-align:center;}
+.cover-kicker{display:inline-block;font-size:32px;letter-spacing:6px;color:var(--gold-soft);border-bottom:1px solid rgba(201,164,91,.45);padding-bottom:12px;}
+.cover-title{margin-top:30px;font-family:var(--font-display);font-size:92px;font-weight:700;line-height:1.12;letter-spacing:5px;color:#FBF5EA;text-shadow:0 6px 30px rgba(0,0,0,.4);}
+.cover-sub{margin-top:22px;font-family:var(--font-display);font-size:44px;font-weight:600;letter-spacing:10px;color:var(--gold);}
+.cover-rule{width:110px;height:3px;margin:36px auto 0;background:linear-gradient(90deg,rgba(201,164,91,.15),var(--gold),rgba(201,164,91,.15));}
+.cover-motto{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:6;font-family:var(--font-display);font-size:18px;letter-spacing:9px;color:rgba(232,211,166,.5);}
+.cover-foot{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;white-space:nowrap;}
+.cover-foot .item{display:flex;align-items:baseline;gap:10px;padding:0 32px;border-right:1px solid rgba(232,211,166,.18);font-size:18px;letter-spacing:1px;}
+.cover-foot .item:first-child{padding-left:0;}
+.cover-foot .item:last-child{border-right:none;padding-right:0;}
+.cover-foot span{color:rgba(246,239,227,.5);}
+.cover-foot b{color:var(--gold-soft);font-weight:600;}
+.btn-start{margin-top:30px;display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-family:inherit;
+  font-size:30px;font-weight:600;letter-spacing:3px;color:var(--brand-ink);background:linear-gradient(135deg,var(--gold-soft),var(--gold));
+  border:none;border-radius:999px;padding:18px 44px;transition:transform .2s ease,box-shadow .2s ease;box-shadow:0 10px 26px rgba(0,0,0,.28);}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(0,0,0,.34);}
+.btn-start svg{width:22px;height:22px;}
+
+/* ============================================================
+   播放器外框（不进 PDF，只服务屏幕）
+   ============================================================ */
+.chrome{position:fixed;z-index:20;font-family:var(--font-sans);}
+#bar-top{left:0;top:0;width:100%;height:2px;background:rgba(255,255,255,.08);}
+#bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--gold));transition:width .5s cubic-bezier(.22,.61,.36,1);}
+#dots{left:50%;bottom:32px;transform:translateX(-50%);display:flex;align-items:center;gap:7px;}
+.dot{width:22px;height:4px;border-radius:99px;border:none;cursor:pointer;background:rgba(255,255,255,.2);padding:0;transition:all .3s ease;}
+.dot:hover{background:rgba(255,255,255,.45);}
+.dot.on{width:44px;background:linear-gradient(90deg,var(--brand),var(--gold));}
+#ctrls{right:44px;bottom:22px;display:flex;align-items:center;gap:10px;}
+#count{font-family:var(--font-display);font-size:18px;letter-spacing:2px;color:rgba(255,255,255,.55);margin-right:6px;}
+#count b{color:#fff;font-weight:700;}
+.cbtn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;}
+.cbtn:hover:not(:disabled){background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.34);}
+.cbtn:disabled{opacity:.24;cursor:default;}
+.cbtn svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ============================================================
+   响应式 / 无障碍 / 打印
+   ============================================================ */
+@media (max-width:820px){
+  #viewport{padding:38px 12px 62px;}
+  .cover-title{font-size:64px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide,.dot,.btn-start,.cbtn{transition:none;}
+}
+@page{size:256mm 144mm;margin:0;}
+@media print{
+  html,body{overflow:visible;background:#fff;height:auto;}
+  #viewport{position:static;display:block;padding:0;}
+  .chrome{display:none!important;}
+  #stage{width:auto;height:auto;transform:none!important;box-shadow:none;zoom:.605;}
+  .slide{position:relative;opacity:1;visibility:visible;transform:none;page-break-after:always;break-inside:avoid;margin:0 auto;}
+}
+</style>
+
+<style id="role-css">
+/* ============================================================
+   第 3 页 · AI 角色分工（仅作用于 #framework）
+   ============================================================ */
+#framework .slide-body{grid-template-rows:auto minmax(0,1fr);}
+#framework .fr3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.34fr) minmax(0,.94fr);gap:20px;}
+#framework .fr3 .panel{padding:13px 18px;}
+#framework .fr3 .panel-title{font-size:22px;padding-bottom:7px;margin-bottom:7px;}
+#framework .fr3 .panel-title span:last-child{font-size:14px;}
+#framework .fr3 .timeline{gap:6px;}
+#framework .fr3 .tl{padding-left:22px;}
+#framework .fr3 .tl::before{left:6px;top:5px;bottom:-6px;}
+#framework .fr3 .tl::after{width:10px;height:10px;top:4px;}
+#framework .fr3 .tl h5{font-size:17px;}
+#framework .fr3 .tl p{font-size:15px;line-height:1.45;margin-top:1px;}
+#framework .fr3 .table{font-size:15px;}
+#framework .fr3 .table th{padding:6px 9px;}
+#framework .fr3 .table td{padding:5px 9px;line-height:1.4;}
+#framework .fr3 .list{font-size:15px;line-height:1.5;}
+#framework .fr3 .list li{margin-bottom:5px;}
+
+#framework .fr-roles{display:flex;flex-direction:column;min-height:0;padding:12px 18px 9px;}
+#framework .fr-roles .panel-title{font-size:22px;padding-bottom:7px;margin-bottom:6px;}
+#framework .rgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;flex:1;min-height:0;}
+#framework .rcol{border-left:3px solid var(--line-2);padding-left:12px;min-width:0;}
+#framework .rcol--pre{border-color:var(--ai);}
+#framework .rcol--in{border-color:var(--risk);}
+#framework .rcol--post{border-color:#9A7524;}
+#framework .rchd{display:flex;align-items:baseline;gap:7px;padding-bottom:4px;margin-bottom:2px;border-bottom:1px solid var(--line);}
+#framework .rchd b{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:1px;}
+#framework .rcol--pre .rchd b{color:var(--ai);}
+#framework .rcol--in .rchd b{color:var(--risk);}
+#framework .rcol--post .rchd b{color:#8A671F;}
+#framework .rchd span{font-size:13px;letter-spacing:.3px;color:var(--ink-3);}
+#framework .rlist li{list-style:none;display:flex;gap:8px;align-items:baseline;padding:3px 0;border-bottom:1px dashed var(--line);}
+#framework .rlist li:last-child{border-bottom:none;}
+#framework .rlist b{flex:none;font-size:16px;font-weight:700;color:var(--ink);letter-spacing:.2px;}
+#framework .rlist i{flex:1;min-width:0;font-style:normal;font-size:14.5px;line-height:1.4;color:var(--ink-2);}
+#framework .rlist i em{font-style:normal;color:var(--risk);font-weight:600;}
+#framework .rban{margin-top:7px;background:#FBF4F4;border:1px solid rgba(166,36,44,.2);border-radius:7px;padding:6px 10px 7px;}
+#framework .rbhd{font-size:13.5px;font-weight:700;letter-spacing:.3px;color:var(--risk);margin-bottom:3px;}
+#framework .rbrow{display:flex;gap:8px;align-items:baseline;font-size:14px;line-height:1.45;color:var(--ink-2);}
+#framework .rbrow b{flex:none;color:var(--risk);font-size:14.5px;}
+#framework .fr-foot{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:14px;line-height:1.5;color:var(--ink-2);}
+#framework .fr-foot b{color:var(--brand);}
+</style>
+
+<style id="plan-css">
+/* ============================================================
+   第 5 页 · 建设模块堆叠图（仅作用于 #plan）
+   ============================================================ */
+#plan .mods{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding-right:54px;}
+#plan .mband{display:grid;grid-template-columns:82px minmax(0,1fr);gap:12px;flex:1;min-height:0;}
+#plan .mlab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border-radius:8px;color:#fff;font-family:var(--font-display);font-size:21px;font-weight:700;letter-spacing:3px;}
+#plan .mlab span{font-family:var(--font-sans);font-size:11.5px;font-weight:400;letter-spacing:1.6px;opacity:.72;}
+#plan .mcells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0;}
+#plan .mcells.one{grid-template-columns:minmax(0,1fr);}
+#plan .mcard{background:var(--paper-2);border:1px solid var(--line);border-top:3px solid var(--line-2);
+  border-radius:8px;padding:8px 15px;display:flex;flex-direction:column;justify-content:center;min-width:0;}
+#plan .mcard h6{margin:0;font-size:21px;font-weight:700;color:var(--ink);letter-spacing:.6px;
+  display:flex;align-items:baseline;gap:10px;}
+#plan .mcard h6 i{font-family:var(--font-display);font-style:normal;font-size:15px;font-weight:700;letter-spacing:0;}
+#plan .mcard p{margin:3px 0 0;font-size:16px;line-height:1.55;color:var(--ink-2);}
+#plan .L-base .mlab{background:#1F5F73;} #plan .L-base .mcard{border-top-color:#1F5F73;} #plan .L-base .mcard h6 i{color:#1F5F73;}
+#plan .L-core .mlab{background:#8E1D26;} #plan .L-core .mcard{border-top-color:#8E1D26;} #plan .L-core .mcard h6 i{color:#8E1D26;}
+#plan .L-svc .mlab{background:#9A7524;} #plan .L-svc .mcard{border-top-color:#9A7524;} #plan .L-svc .mcard h6 i{color:#9A7524;}
+#plan .L-loop .mlab{background:#2A070C;} #plan .L-loop .mcard{border-top-color:#2A070C;} #plan .L-loop .mcard h6 i{color:#2A070C;}
+#plan .mfeed{position:absolute;right:0;top:0;bottom:0;width:48px;}
+#plan .mfeed .fline{position:absolute;left:16px;top:6px;bottom:16px;width:0;border-left:2px dashed rgba(142,29,38,.42);}
+#plan .mfeed .fhead{position:absolute;left:10px;bottom:2px;width:0;height:0;
+  border:7px solid transparent;border-top:11px solid var(--brand);}
+#plan .mfeed .ftxt{position:absolute;left:22px;top:50%;transform:translateY(-50%);
+  writing-mode:vertical-rl;text-orientation:upright;font-size:15px;letter-spacing:2px;
+  line-height:1;white-space:nowrap;font-weight:700;color:var(--brand);}
+#plan .col:first-child .tl:nth-child(1)::after{border-color:#1F5F73;}
+#plan .col:first-child .tl:nth-child(2)::after{border-color:#8E1D26;}
+#plan .col:first-child .tl:nth-child(3)::after{border-color:#9A7524;}
+#plan .col:first-child .tl:nth-child(4)::after{border-color:#2A070C;}
+</style>
+
+<style id="diag-css">
+/* ============================================================
+   第 2 页 · 课程诊断版式（仅作用于 #diagnosis）
+   ============================================================ */
+#diagnosis .col:last-child{flex:1;gap:18px;}
+#diagnosis .issue{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;
+  padding:14px 24px;border-left-width:4px;}
+#diagnosis .issue--blue{flex:1.18;}
+#diagnosis .issue--red{border-left-color:#A6242C;}
+#diagnosis .issue--blue{border-left-color:#1F5F73;}
+#diagnosis .issue--gold{border-left-color:#9A7524;}
+#diagnosis .dg-hd{display:flex;align-items:flex-start;gap:16px;}
+#diagnosis .issue-no{position:static;flex:none;width:48px;height:48px;border-radius:9px;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;}
+#diagnosis .issue--red .issue-no{background:#A6242C;}
+#diagnosis .issue--blue .issue-no{background:#1F5F73;}
+#diagnosis .issue--gold .issue-no{background:#9A7524;}
+#diagnosis .issue-h{font-size:24px;letter-spacing:.6px;}
+#diagnosis .dg-sum{margin:6px 0 0;font-size:18px;line-height:1.5;color:var(--ink-2);}
+#diagnosis .chips{margin-top:13px;padding-top:13px;border-top:1px dashed rgba(22,32,42,.16);gap:9px;}
+#diagnosis .chip{font-size:20px;padding:11px 20px;letter-spacing:.5px;}
+#diagnosis .dg-goal{display:flex;flex-direction:column;min-height:0;}
+#diagnosis .goals{flex:1;min-height:0;counter-reset:g;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  grid-auto-rows:minmax(72px,1fr);gap:10px;margin-top:2px;}
+#diagnosis .goals span{counter-increment:g;grid-column:span 2;display:flex;flex-direction:column;gap:5px;
+  align-items:center;justify-content:center;text-align:center;
+  background:var(--paper-2);border:1px solid var(--line);border-top:2px solid var(--gold);border-radius:8px;
+  font-size:20px;font-weight:700;color:var(--ink);letter-spacing:.8px;padding:8px;}
+#diagnosis .goals span::before{content:"0" counter(g);font-family:var(--font-display);font-size:14px;
+  font-weight:400;letter-spacing:1.5px;color:#A9822F;}
+#diagnosis .goals span:nth-child(4),#diagnosis .goals span:nth-child(5){grid-column:span 3;font-size:20px;}
+</style>
+
+<style id="ladder-css">
+/* ============================================================
+   素养进阶三维体系 · 自包含组件（选择器全部限定在 #ladder 内）
+   ============================================================ */
+#ladder .l3d-panel{padding:0;overflow:hidden;position:relative;background:var(--paper);}
+#ladder .l3d{position:absolute;inset:0;}
+#ladder canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none;}
+#ladder canvas.dragging{cursor:grabbing;}
+
+#ladder .l3d-legend{position:absolute;left:20px;top:16px;display:grid;gap:6px;pointer-events:none;}
+#ladder .lg{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.92);border:1px solid var(--line);
+  border-radius:6px;padding:4px 10px;font-size:15px;letter-spacing:.3px;color:var(--ink-2);width:max-content;}
+#ladder .lg b{color:var(--ink);font-weight:700;}
+#ladder .lg i{width:20px;border-top:3px solid var(--ink);display:block;flex:none;}
+#ladder .lg i.dash{border-top-style:dashed;}
+#ladder .lg em{font-style:normal;width:11px;height:11px;flex:none;transform:rotate(45deg);border-radius:2px;}
+#ladder .lg .tiers{display:flex;gap:7px;align-items:center;font-size:13.5px;color:var(--ink-2);}
+#ladder .lg .tiers s{text-decoration:none;font-weight:700;}
+
+#ladder .l3d-ctrl{position:absolute;right:372px;bottom:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+#ladder .ctl{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+  box-shadow:0 1px 4px rgba(22,32,42,.06);}
+#ladder .ctl .cap{font-size:12.5px;letter-spacing:1.2px;color:var(--ink-3);text-transform:uppercase;margin-bottom:5px;}
+#ladder .ctl .r{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+#ladder .b{font-family:inherit;font-size:14.5px;line-height:1;padding:7px 11px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--paper);color:var(--ink-2);letter-spacing:.3px;transition:all .16s ease;}
+#ladder .b:hover{border-color:var(--brand);color:var(--brand);}
+#ladder .b.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+#ladder .seg .b{border-radius:0}
+#ladder .seg .b:first-child{border-radius:6px 0 0 6px}
+#ladder .seg .b:last-child{border-radius:0 6px 6px 0}
+#ladder .seg .b+.b{border-left:none}
+#ladder input[type=range]{width:120px;accent-color:var(--brand);vertical-align:middle;}
+#ladder .stgname{font-size:14.5px;color:var(--ink);font-weight:600;letter-spacing:.3px;min-width:104px;}
+
+#ladder .l3d-info{position:absolute;right:14px;top:14px;bottom:56px;width:340px;overflow:auto;
+  background:var(--paper);border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:8px;
+  padding:14px 16px 16px;font-size:15.5px;line-height:1.7;color:var(--ink-2);
+  box-shadow:0 2px 10px rgba(22,32,42,.05);}
+#ladder .l3d-info::-webkit-scrollbar{width:7px}
+#ladder .l3d-info::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px}
+#ladder .l3d-info h3{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--ink);letter-spacing:.5px;margin-bottom:2px;}
+#ladder .l3d-info .en{font-size:12.5px;letter-spacing:1.2px;color:var(--ink-3);text-transform:uppercase;margin-bottom:10px;}
+#ladder .l3d-info h4{font-size:13px;letter-spacing:1.4px;color:var(--brand);text-transform:uppercase;margin:13px 0 4px;font-weight:700;}
+#ladder .l3d-info p{margin:0 0 7px;}
+#ladder .l3d-info b{color:var(--ink);}
+#ladder .l3d-info ul{list-style:none;}
+#ladder .l3d-info li{position:relative;padding-left:13px;margin-bottom:5px;}
+#ladder .l3d-info li::before{content:'';position:absolute;left:0;top:.66em;width:5px;height:5px;border-radius:50%;background:var(--gold);}
+#ladder .l3d-info .ex{border-left:2px solid var(--gold);padding-left:10px;color:var(--ink-2);font-size:14.5px;}
+#ladder .pill{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.4px;padding:3px 8px;border-radius:4px;color:#fff;margin:0 5px 5px 0;}
+#ladder .rl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--paper-2);
+  border-radius:6px;padding:6px 8px;font-size:14.5px;color:var(--ink-2);cursor:pointer;margin-bottom:4px;}
+#ladder .rl:hover{border-color:var(--brand);color:var(--ink);}
+#ladder .rl i{width:9px;height:9px;border-radius:2px;flex:none;transform:rotate(45deg);}
+#ladder .rl.off{opacity:.5;}
+#ladder .rl .tag{margin-left:auto;font-size:12px;color:var(--ink-3);letter-spacing:.4px;}
+#ladder .grp-cap{font-size:12.5px;letter-spacing:1.2px;color:var(--ink-3);margin:10px 0 4px;text-transform:uppercase;}
+#ladder .x{position:absolute;right:9px;top:8px;border:1px solid var(--line-2);background:var(--paper);color:var(--ink-3);
+  border-radius:5px;font-size:13.5px;line-height:1;padding:5px 8px;cursor:pointer;}
+#ladder .x:hover{color:var(--brand);border-color:var(--brand);}
+#ladder .l3d-tip{position:absolute;pointer-events:none;background:var(--brand-ink);color:#fff;font-size:14px;
+  padding:4px 9px;border-radius:5px;opacity:0;transform:translate(-50%,-150%);white-space:nowrap;transition:opacity .12s;}
+@media print{ #ladder .l3d-info{font-size:13.5px} #ladder .lg{font-size:13.5px} }
+</style>
+
+</head>
+<body>
+
+<div id="viewport">
+ <div id="stage">
+
+  <!-- ========== 第 1 页 · 封面 ========== -->
+  <section class="slide cover" id="cover">
+    <div class="cover-topline"></div>
+
+    <div class="cover-inner">
+      <div class="cover-date">2026 年 9 月</div>
+    </div>
+
+    <div class="cover-main">
+      <div class="cover-kicker">人机协作课程建设</div>
+      <h1 class="cover-title">生物科学综合实验</h1>
+      <div class="cover-sub">建设方案交流</div>
+      <div class="cover-rule"></div>
+      <button class="btn-start" onclick="go(1)">进入方案
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <div class="cover-motto">博学 · 审问 · 慎思 · 明辨 · 笃行</div>
+
+    <div class="cover-foot">
+      <div class="item"><span>课程性质</span><b>专业必修课</b></div>
+      <div class="item"><span>学分 / 课时</span><b>3 / 108</b></div>
+      <div class="item"><span>共建单位</span><b>中山大学 · 超星集团</b></div>
+      <div class="item"><span>编制</span><b>吴佳梦 · 高级课程经理</b></div>
+      <div class="item"><span>时间</span><b>2026.09</b></div>
+    </div>
+  </section>
+
+  <!-- ========== 第 2 页 · 课程诊断 ========== -->
+  <section class="slide" id="diagnosis">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">01</span>现状分析</div>
+        <h2 class="slide-title">课程诊断</h2>
+      </div>
+      <p class="head-note">三项诊断分别指向<b>内容资产、协作分工与评价闭环</b>三处缺口，构成后续建设的出发点。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <!-- 左：课程基本盘 -->
+      <div class="col">
+        <div class="panel" style="flex:none;">
+          <div class="panel-title"><span>课程基本盘</span><span>COURSE INFO</span></div>
+          <dl class="spec">
+            <dt>课程名称</dt><dd>生物科学综合实验</dd>
+            <dt>开设学期</dt><dd>本科第三学年</dd>
+            <dt>课程性质</dt><dd>专业必修课</dd>
+            <dt>学分 / 课时</dt><dd>3 学分 / 108 课时</dd>
+          </dl>
+          <div class="kpi-row">
+            <div class="kpi"><b>3</b><span>学分</span></div>
+            <div class="kpi"><b>108</b><span>课时</span></div>
+            <div class="kpi"><b>Y3</b><span>第三学年</span></div>
+          </div>
+        </div>
+        <div class="panel dg-goal" style="flex:1;">
+          <div class="panel-title"><span>培养目标</span><span>OBJECTIVE</span></div>
+          <div class="goals">
+            <span>实践技能</span><span>综合素养</span><span>良好学习习惯</span><span>学术道德</span><span>学术进取精神</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：三项诊断 -->
+      <div class="col">
+        <div class="issue issue--red">
+          <div class="dg-hd">
+            <div class="issue-no">01</div>
+            <div>
+              <div class="issue-h">教学内容组织较为薄弱</div>
+              <p class="dg-sum">知识资源与图谱尚未结构化建设。</p>
+            </div>
+          </div>
+          <div class="chips"><span class="chip">AI 知识库建设薄弱</span><span class="chip">多维图谱建设薄弱</span></div>
+        </div>
+        <div class="issue issue--blue">
+          <div class="dg-hd">
+            <div class="issue-no">02</div>
+            <div>
+              <div class="issue-h">人机协作体系尚未成型</div>
+              <p class="dg-sum">AI 仅零散介入个别环节，未形成覆盖全流程的协作分工。</p>
+            </div>
+          </div>
+          <div class="chips">
+            <span class="chip chip--ai">多模态 AI 智能体融入不足</span>
+            <span class="chip chip--ai">智能体未覆盖各学习环节</span>
+            <span class="chip">任务引擎学习活动吸引力不足</span>
+            <span class="chip">沉浸式学习场景有待提升</span>
+          </div>
+        </div>
+        <div class="issue issue--gold">
+          <div class="dg-hd">
+            <div class="issue-no">03</div>
+            <div>
+              <div class="issue-h">课程评价体系仍需优化与落地</div>
+              <p class="dg-sum">尚未形成"教学评"闭环，评价结果难以反哺内容与教学策略。</p>
+            </div>
+          </div>
+          <div class="chips">
+            <span class="chip">评价维度待完善</span>
+            <span class="chip">评价方式待完善</span>
+            <span class="chip">数据反馈机制待完善</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 3 页 · 人机协作体系 ========== -->
+  <section class="slide" id="framework">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">02</span>人机协作体系 · 运行框架</div>
+        <h2 class="slide-title">教师、AI 与学生，<em>各就各位</em></h2>
+      </div>
+      <p class="head-note">先定三方定位与协作机制，再把 AI 拆成<b>按实验阶段分化的角色</b>：可用 14 个，明确禁止 3 个。角色不同，权限就不同。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body">
+      <div class="fr3">
+        <div class="panel">
+          <div class="panel-title"><span>人机协作体系</span><span>WORKFLOW</span></div>
+          <div class="timeline">
+            <div class="tl"><h5>教师主导设计</h5><p>目标设定、内容审核、线下指导</p></div>
+            <div class="tl"><h5>AI 分角色支持</h5><p>按实验前、中、后扮演不同角色</p></div>
+            <div class="tl"><h5>学生自主探究</h5><p>完成任务、质疑反思、成果产出</p></div>
+            <div class="tl"><h5>数据持续反馈</h5><p>全过程数据回流，驱动教学改进</p></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><span>三方分工</span><span>ROLES</span></div>
+          <table class="table">
+            <thead><tr><th style="width:14%">角色</th><th style="width:24%">定位</th><th>主要职责</th></tr></thead>
+            <tbody>
+              <tr><td><b>教师</b></td><td>设计与把关</td><td>目标设定、内容审核、最终评价</td></tr>
+              <tr><td><b>AI</b></td><td>按阶段分化</td><td>前 5 个、中 3 个、后 6 个角色</td></tr>
+              <tr><td><b>学生</b></td><td>学习与责任主体</td><td>完成任务、质疑反思、署名担责</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title"><span>协作机制</span><span>MECHANISM</span></div>
+          <ul class="list">
+            <li><b>介入边界：</b>答疑、任务生成与作业初评由 AI 承担；成绩认定、学术诚信、实验安全等关键判断始终由教师接管</li>
+            <li><b>确认规则：</b>涉及成绩与结论的结果，必须由教师复核确认</li>
+            <li><b>角色优先：</b>先规定 AI 扮演哪个角色，再规定它能用多深</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel fr-roles">
+        <div class="panel-title"><span>AI 角色分工 · 按实验阶段</span><span>ROLE BY PHASE ｜ 14 个可用角色 · 3 个禁止角色</span></div>
+        <div class="rgrid">
+          <div class="rcol rcol--pre">
+            <div class="rchd"><b>实验前</b><span>PRE-LAB · 5 个角色</span></div>
+            <ul class="rlist">
+              <li><b>文献情报官</b><i>检索与综述，未溯源即无效</i></li>
+              <li><b>苏格拉底提问者</b><i>只追问不给答案</i></li>
+              <li><b>方案批判对手</b><i>挑漏洞与假重复，<em>不代写终版</em></i></li>
+              <li><b>操作预演教练</b><i>复述流程与安全清单</i></li>
+              <li><b>预注册管理员</b><i>锁定假设与剔除规则</i></li>
+            </ul>
+          </div>
+          <div class="rcol rcol--in">
+            <div class="rchd"><b>实验中</b><span>WHILE-LAB · 3 个角色，均为非判断性</span></div>
+            <ul class="rlist">
+              <li><b>现场记录员</b><i>只转写打点，记录仍手写</i></li>
+              <li><b>术语查询员</b><i>可问原理，不可问该加多少</i></li>
+              <li><b>延后提问箱</b><i>观察封存后才作答</i></li>
+            </ul>
+            <div class="rban">
+              <div class="rbhd">红线 · 3 个禁止角色（不随学段放宽）</div>
+              <div class="rbrow"><b>判断员</b><span>是不是污染、是不是二聚体</span></div>
+              <div class="rbrow"><b>参数员</b><span>加多少、离心多久、调几度</span></div>
+              <div class="rbrow"><b>决策员</b><span>要不要重做、剔除样本</span></div>
+            </div>
+          </div>
+          <div class="rcol rcol--post">
+            <div class="rchd"><b>实验后</b><span>POST-LAB · 6 个角色</span></div>
+            <ul class="rlist">
+              <li><b>分析伙伴</b><i>脚本与统计候选，须手算比对</i></li>
+              <li><b>替代解释生成器</b><i>给三种解释，各配排除方案</i></li>
+              <li><b>图像初筛员</b><i>识别初筛，100% 人工复核</i></li>
+              <li><b>表达教练</b><i>只到语言层，<em>不改写主张</em></i></li>
+              <li><b>模拟答辩评审</b><i>追问暴露断点，不给答案</i></li>
+              <li><b>元认知访谈员</b><i>生成使用声明草稿</i></li>
+            </ul>
+          </div>
+        </div>
+        <div class="fr-foot">同一段提示语只差一句话：「帮我写方案」是替代思考，「攻击我的方案」是加深思考，<b>所以角色要先于权限被规定</b>。逐条角色的完整边界与校验动作，见第 04 页交互图。</div>
+      </div>
+    </div>
+  </section></section>
+
+  <!-- ========== 第 4 页 · 素养进阶三维体系（可交互） ========== -->
+  <section class="slide" id="ladder">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">03</span>人机协作体系 · 素养进阶</div>
+        <h2 class="slide-title">三根轴定坐标，<em>三个阶段看进阶</em></h2>
+      </div>
+      <p class="head-note">同一学期内的三大板块：<b>基础实验 → 综合实验 → 毕设前准备</b>。横轴为任务进程（三阶六环），纵轴为素养层级 L1→L4，深度轴为 AI 介入档位。<b>板块越往后，许可上限越高，素养要求也越高。</b></p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body">
+      <div class="panel l3d-panel">
+        <div class="l3d" id="l3d">
+          <canvas id="l3d-cv" role="img" aria-label="生物科学综合实验人机协作素养进阶三维交互图"></canvas>
+
+          <div class="l3d-legend">
+            <div class="lg"><i></i><span><b>横轴 X</b> 任务进程 · 三阶六环</span></div>
+            <div class="lg"><i style="border-color:#3E6B4F"></i><span><b>纵轴 Y</b> 素养层级 · L1→L4</span></div>
+            <div class="lg"><i class="dash" style="border-color:#2A070C"></i><span><b>虚线脊线</b> 本板块的许可上限</span></div>
+            <div class="lg"><em style="background:#1F5F73"></em><span><b>实心菱形</b> 本板块开放的角色</span></div>
+            <div class="lg"><em style="background:#fff;border:1.5px solid #A9B0B6;transform:rotate(45deg)"></em><span><b>空心菱形</b> 超出本板块上限</span></div>
+            <div class="lg"><i class="dash" style="border-color:#9A7524"></i><span><b>深度轴 Z</b> 权限档 · 由内向外 0 → 3</span></div>
+          </div>
+
+          <div class="l3d-ctrl">
+            <div class="ctl">
+              <div class="cap">课程板块</div>
+              <div class="r">
+                <input type="range" id="l3d-sem" min="0" max="2" step="1" value="2" aria-label="课程板块">
+                <span class="stgname" id="l3d-semtxt"></span>
+                <button class="b" id="l3d-play" type="button">自动播放</button>
+              </div>
+            </div>
+            <div class="ctl">
+              <div class="cap">视角</div>
+              <div class="r seg">
+                <button class="b on" type="button" data-view="iso">等轴测</button>
+                <button class="b" type="button" data-view="top">俯视矩阵</button>
+                <button class="b" type="button" data-view="front">正视阶梯</button>
+              </div>
+            </div>
+            <div class="ctl">
+              <div class="cap">显示</div>
+              <div class="r">
+                <button class="b on" type="button" id="l3d-tg-roles">角色标记</button>
+                <button class="b" type="button" id="l3d-tg-ban">禁止角色</button>
+                <button class="b on" type="button" id="l3d-tg-grid">坐标格</button>
+              </div>
+            </div>
+            <div class="ctl">
+              <div class="cap">环节筛选</div>
+              <div class="r seg">
+                <button class="b on" type="button" data-ph="all">全部</button>
+                <button class="b" type="button" data-ph="pre">前</button>
+                <button class="b" type="button" data-ph="in">中</button>
+                <button class="b" type="button" data-ph="post">后</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="l3d-info" id="l3d-info"></aside>
+          <div class="l3d-tip" id="l3d-tip"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 5 页 · 建设方案 ========== -->
+  <section class="slide" id="plan">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">04</span>建设方案 · 总体规划</div>
+        <h2 class="slide-title">六大模块，<em>一张蓝图</em></h2>
+      </div>
+      <p class="head-note">分层推进：<b>知识库与图谱打基座，展厅与任务引擎筑核心</b>，Agent 提供智能服务，数据闭环持续优化评价。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <div class="col">
+        <div class="panel" style="flex:none;">
+          <div class="panel-title"><span>总体目标</span><span>GOAL</span></div>
+          <p class="note">把《生物科学综合实验》建设为<b>内容资产完备、智能支持全程、数据闭环驱动</b>的人机协作实验课程新样态。</p>
+        </div>
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>建设层次</span><span>LAYERS</span></div>
+          <div class="timeline">
+            <div class="tl"><h5>基座建设 · AI 知识库 / 多维图谱</h5><p>先把课程内容变成可信、可用、可被 AI 调用的资产</p></div>
+            <div class="tl"><h5>核心建设 · 虚拟展厅 / 任务引擎</h5><p>让资源可展示、学习有任务、过程留数据</p></div>
+            <div class="tl"><h5>智能服务 · 多 Agent</h5><p>覆盖课前、课中、课后全流程的协同支持</p></div>
+            <div class="tl"><h5>闭环运行 · 数据驱动</h5><p>全粒度学情留存，反哺内容与教学策略</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel" style="flex:1;display:flex;flex-direction:column;">
+          <div class="panel-title"><span>建设模块总览</span><span>MODULES · 自下而上</span></div>
+          <div class="mods">
+            <div class="mband L-loop">
+              <div class="mlab">闭环<span>DATA</span></div>
+              <div class="mcells one">
+                <div class="mcard"><h6><i>06</i>数据驱动</h6><p>全粒度学情留存，优化评价体系，反哺内容与教学策略</p></div>
+              </div>
+            </div>
+            <div class="mband L-svc">
+              <div class="mlab">服务<span>AGENT</span></div>
+              <div class="mcells one">
+                <div class="mcard"><h6><i>05</i>多 Agent</h6><p>课程专属 AI 助教 24h 在线；操作视频 / 报告 AI 初评上线</p></div>
+              </div>
+            </div>
+            <div class="mband L-core">
+              <div class="mlab">核心<span>CORE</span></div>
+              <div class="mcells">
+                <div class="mcard"><h6><i>03</i>虚拟展厅</h6><p>多模态资源体系 + 学生成果常设展，移动端可访问</p></div>
+                <div class="mcard"><h6><i>04</i>任务引擎</h6><p>萌芽课题全周期线上管理</p></div>
+              </div>
+            </div>
+            <div class="mband L-base">
+              <div class="mlab">基座<span>BASE</span></div>
+              <div class="mcells">
+                <div class="mcard"><h6><i>01</i>AI 知识库</h6><p>按模块搭建知识库，增加多模态资源</p></div>
+                <div class="mcard"><h6><i>02</i>多维图谱</h6><p>知识、能力、实验、个性化图谱节点上线</p></div>
+              </div>
+            </div>
+            <div class="mfeed"><span class="fline"></span><span class="fhead"></span><span class="ftxt">数据反哺</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 6 页 · AI 知识库 ========== -->
+  <section class="slide" id="kb">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">05</span>AI 知识库 · 内容底座</div>
+        <h2 class="slide-title">先有<em>权威知识</em>，才有可靠智能</h2>
+      </div>
+      <p class="head-note">从课程<b>能力培养目标</b>出发反推知识库建设：要培养什么能力，就沉淀什么内容。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>这门课要培养的能力</span><span>COMPETENCY</span></div>
+          <ul class="list">
+            <li><b>规范操作能力：</b>实验原理理解、操作执行与现象记录</li>
+            <li><b>综合分析能力：</b>数据处理、结果解读与误差反思</li>
+            <li><b>创新研究能力：</b>自主选题、方案设计与成果产出（萌芽课题）</li>
+            <li><b>人机协作能力：</b>善用 AI 完成检索、分析与自评，并能审视 AI 输出</li>
+            <li><b>科研素养：</b>实验伦理、生物安全与学术诚信</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel" style="flex:none;">
+          <div class="panel-title"><span>课程专属 AI 知识库</span><span>KNOWLEDGE BASE</span></div>
+          <ul class="list">
+            <li><b>分类整理：</b>原理背景、操作规范、安全应急、常见问题与失败案例、拓展前沿</li>
+            <li><b>按模块建库：</b>随教材实验模块逐一搭建，便于精准调用</li>
+            <li><b>多模态扩充：</b>文档、图片、微课与标准操作视频同步入库</li>
+          </ul>
+        </div>
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>入库流程</span><span>PIPELINE</span></div>
+          <div class="timeline">
+            <div class="tl"><h5>解析与提取</h5><p>文件解析、字符解析、图片提取</p></div>
+            <div class="tl"><h5>知识点同步</h5><p>形成可被 AI 调用、可溯源的知识颗粒</p></div>
+            <div class="tl"><h5>教师审核</h5><p>逐条把关权威性与表述准确性</p></div>
+            <div class="tl"><h5>发布与更新</h5><p>随教学反馈与高频问题持续补充</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 7 页 · 多维图谱 ========== -->
+  <section class="slide" id="graph">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">06</span>多维图谱 · 知识组织</div>
+        <h2 class="slide-title">把课程要素织成<em>一张网</em></h2>
+      </div>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>图谱建设规划</span><span>PLANNING</span></div>
+          <table class="table">
+            <thead><tr><th style="width:15%">图谱类型</th><th style="width:15%">建设建议</th><th style="text-align:center;">适配内容</th></tr></thead>
+            <tbody>
+              <tr><td><b>知识图谱</b></td><td>建议完善</td><td>已梳理一版；建议升级为「AI 技术在生物科学实验中的应用 + 本课程专业知识」双知识体系</td></tr>
+              <tr><td><b>能力图谱</b></td><td>建议做</td><td>回答"这门课培养哪些能力"：「生物科学实验能力 + 人机协作能力」双轨并行</td></tr>
+              <tr><td><b>实验图谱</b></td><td>建议做</td><td>重要实验按「实验要求 + 实验步骤 + 知识点」连成图谱</td></tr>
+              <tr><td><b>个性化图谱</b></td><td>可建设</td><td>基于学习行为与掌握数据，生成个人学习路径与学情画像，支撑因材施教</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>优秀图谱案例</span><span>CASES</span></div>
+          <div class="carousel">
+            <div class="slides">
+              <div class="slide-item">案例图位 1</div>
+              <div class="slide-item">案例图位 2</div>
+              <div class="slide-item">案例图位 3</div>
+            </div>
+            <button class="c-nav prev" aria-label="上一张">‹</button>
+            <button class="c-nav next" aria-label="下一张">›</button>
+            <div class="c-dots"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 8 页 · 虚拟展厅 ========== -->
+  <section class="slide" id="gallery">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">07</span>虚拟展厅 · 成果展示</div>
+        <h2 class="slide-title">沉浸式学习<em>新场景</em></h2>
+      </div>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>虚拟展厅</span><span>EXHIBITS</span></div>
+          <ul class="list">
+            <li><b>微课与原理动画</b>：核心知识点的可视化讲解，可反复观摩</li>
+            <li><b>标准操作视频</b>：规范化操作的样板库</li>
+            <li><b>优秀报告与萌芽课题海报</b>：学生成果常设展，按学期轮换</li>
+            <li><b>3D / 全景展厅</b>：已有高校建成案例可直接引用，补足沉浸式学习场景</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>展厅案例</span><span>CASES · 超星 VR 展厅</span></div>
+          <table class="table">
+            <thead><tr><th style="width:38%">高校名称</th><th style="width:30%">课程名称</th><th>入口</th></tr></thead>
+            <tbody>
+              <tr><td><b>福建中医药大学</b></td><td>中医诊断学</td><td><a class="linkbtn" href="https://vr.chaoxing.com/#/showCustomerSpace?id=NzUyOTI" target="_blank" rel="noopener">进入展厅</a></td></tr>
+              <tr><td><b>上海交通大学</b></td><td>妇产科</td><td><a class="linkbtn" href="https://vr.chaoxing.com/#/showCustomerSpace?id=NzUwNjY" target="_blank" rel="noopener">进入展厅</a></td></tr>
+              <tr><td><b>中国石油大学</b></td><td>语言康复学</td><td><a class="linkbtn" href="https://vr.chaoxing.com/#/showCustomerSpace?id=ODAwNTY" target="_blank" rel="noopener">进入展厅</a></td></tr>
+            </tbody>
+          </table>
+          <div class="note" style="margin-top:26px;">以上为超星 VR 展厅已建成案例，点击入口可直接查看其空间结构与布展方式，可借鉴到本课程展厅。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 9 页 · 任务引擎 ========== -->
+  <section class="slide" id="task">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">08</span>任务引擎 · 学习驱动</div>
+        <h2 class="slide-title">用<em>任务</em>把学与评串起来</h2>
+      </div>
+      <p class="head-note">以任务为学习的基本驱动力：引擎生成、推送不同层次与类型的任务，衔接知识库、图谱与评价。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>任务类型</span><span>TYPES</span></div>
+          <ul class="list list--lg">
+            <li><b>基础规范型：</b>微课 + 预习检测微任务 + 题库自测（容量 500+）+ 操作视频 AI 批阅（RNA / DNA 提取）</li>
+            <li><b>综合设计型：</b>给定主题的实验设计与数据分析；CRISPR 基因编辑方案 AI 模拟评审</li>
+            <li><b>开放探究型：</b>萌芽课题五节点链：选题（AI 荐题）→ 方案（AI 验证）→ 中期（过程数据）→ 海报 → 答辩</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>样例展示</span><span>SAMPLES · 稍后平台演示</span></div>
+          <div class="carousel">
+            <div class="slides">
+              <div class="slide-item">样例图位 1</div>
+              <div class="slide-item">样例图位 2</div>
+              <div class="slide-item">样例图位 3</div>
+            </div>
+            <button class="c-nav prev" aria-label="上一张">‹</button>
+            <button class="c-nav next" aria-label="下一张">›</button>
+            <div class="c-dots"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 10 页 · 多 Agent ========== -->
+  <section class="slide" id="agents">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">09</span>多 Agent · 全流程覆盖</div>
+        <h2 class="slide-title">四个角色，<em>一条流水线</em></h2>
+      </div>
+      <p class="head-note">角色分工明确的多个 Agent，覆盖<b>课前预习、课中实验、课后复盘</b>全流程。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>Agent 矩阵</span><span>AGENTS</span></div>
+          <table class="table">
+            <thead><tr><th style="width:32%">Agent</th><th>角色定位 / 典型场景</th></tr></thead>
+            <tbody>
+              <tr><td><b>答疑导师 Agent</b></td><td>课前预习、课后复习：概念讲解、原理问答</td></tr>
+              <tr><td><b>实验指导 Agent</b></td><td>课中实验支持：步骤提示、操作错误识别与提醒</td></tr>
+              <tr><td><b>评价反馈 Agent</b></td><td>作业与报告评价：量规初评、改进建议</td></tr>
+              <tr><td><b>助教 Agent</b></td><td>辅助教师：学情整理、资料生成、问题归集</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>协同与边界</span><span>GOVERNANCE</span></div>
+          <ul class="list">
+            <li><b>Agent 间交接规则：</b>问答上下文与学情数据随请求传递；遇到成绩认定、学术诚信、实验安全或无把握答案，自动升级教师</li>
+            <li><b>教师复核与介入机制：</b>关键结论与成绩相关反馈必须教师确认</li>
+            <li><b>应答可靠性与责任边界：</b>回答附知识库出处，无依据时明确提示"不确定"；AI 初评仅作建议，成绩以教师复核为准</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 第 11 页 · 数据驱动 ========== -->
+  <section class="slide" id="data">
+    <header class="slide-head">
+      <div>
+        <div class="eyebrow"><span class="no">10</span>数据驱动 · 持续进化</div>
+        <h2 class="slide-title">让数据说话，<em>让课程进化</em></h2>
+      </div>
+      <p class="head-note">平台学情数据<b>全粒度留存</b>：小到一个知识点，大到整门课程，随处可查。</p>
+    </header>
+    <div class="head-rule"></div>
+
+    <div class="slide-body g-side">
+      <div class="col">
+        <div class="panel" style="flex:none;">
+          <div class="panel-title"><span>数据来源</span><span>SOURCES</span></div>
+          <ul class="list">
+            <li>知识库问答记录与任务完成数据</li>
+            <li>图谱学习轨迹与展厅互动行为</li>
+            <li>AI 初评结果与教师复核反馈</li>
+          </ul>
+        </div>
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>三层学情 · 全粒度</span><span>ANALYTICS</span></div>
+          <ul class="list">
+            <li><b>任务点级：</b>细到每个知识点、每道题、每次操作批阅的完成与掌握情况</li>
+            <li><b>任务级：</b>每次实验任务的整体完成度、成绩分布与质量分析</li>
+            <li><b>课程级：</b>整门课的目标达成度、能力发展与"教—学—评"闭环报告</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>数据闭环</span><span>LOOP</span></div>
+          <div class="timeline">
+            <div class="tl"><h5>数据采集</h5><p>各模块无感留存学习全过程数据</p></div>
+            <div class="tl"><h5>分析建模</h5><p>形成学情画像与课程运行指标</p></div>
+            <div class="tl"><h5>预警与反馈</h5><p>薄弱点定向推送补救资源，风险提示教师</p></div>
+            <div class="tl"><h5>教学改进</h5><p>反哺知识库、图谱与任务策略，优化评价体系</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+ </div>
+</div>
+
+<!-- 播放器外框 -->
+<div class="chrome" id="bar-top"><div id="bar-fill"></div></div>
+<nav class="chrome" id="dots" aria-label="页面导航"></nav>
+<div class="chrome" id="ctrls">
+  <div id="count"></div>
+  <button class="cbtn" id="prevBtn" onclick="go(-1)" title="上一页（←）" aria-label="上一页">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="cbtn" id="nextBtn" onclick="go(1)" title="下一页（→）" aria-label="下一页">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+  <button class="cbtn" id="fsBtn" onclick="fs()" title="全屏（F）" aria-label="全屏">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+  </button>
+  <button class="cbtn" onclick="window.print()" title="打印 / 导出 PDF" aria-label="打印">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>
+  </button>
+</div>
+
+<script>
+/* ============================================================
+   页面注册表：加一页只需在这里补一行（id 与 section 保持一致）
+   ============================================================ */
+var PAGES = [
+  { id:'cover',     nav:'封面' },
+  { id:'diagnosis', nav:'课程诊断' },
+  { id:'framework', nav:'人机协作体系' },
+  { id:'ladder',    nav:'素养进阶' },
+  { id:'plan',      nav:'建设方案' },
+  { id:'kb',        nav:'AI 知识库' },
+  { id:'graph',     nav:'多维图谱' },
+  { id:'gallery',   nav:'虚拟展厅' },
+  { id:'task',      nav:'任务引擎' },
+  { id:'agents',    nav:'多 Agent' },
+  { id:'data',      nav:'数据驱动' }
+];
+
+(function(){
+  var slides = [], i;
+  for (i = 0; i < PAGES.length; i++) {
+    var el = document.getElementById(PAGES[i].id);
+    if (el) { el.classList.add('slide'); slides.push(el); }
+  }
+  var total = slides.length;
+  // 页码自动写入，避免手写编号对不上
+  for (i = 0; i < total; i++) {
+    var num = document.createElement('div');
+    num.className = 'page-num';
+    num.innerHTML = '<i>' + pad(i + 1) + '</i> / ' + pad(total);
+    slides[i].appendChild(num);
+  }
+  var dots = document.getElementById('dots');
+  for (i = 0; i < total; i++) {
+    var d = document.createElement('button');
+    d.className = 'dot';
+    d.title = pad(i + 1) + ' ' + (PAGES[i].nav || '');
+    d.setAttribute('aria-label', d.title);
+    d.onclick = (function(n){ return function(){ show(n); }; })(i);
+    dots.appendChild(d);
+  }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function fit(){
+    var vp = document.getElementById('viewport');
+    var s = Math.min((vp.clientWidth - 0) / 1600, (vp.clientHeight - 0) / 900);
+    document.getElementById('stage').style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('beforeprint', fit);
+
+  var current = -1;
+  window.show = function(n){
+    n = Math.max(0, Math.min(total - 1, n));
+    if (n === current) return;
+    for (var k = 0; k < total; k++) {
+      slides[k].classList.toggle('is-active', k === n);
+      slides[k].classList.toggle('is-prev', k < n);
+      dots.children[k].classList.toggle('on', k === n);
+    }
+    current = n;
+    document.getElementById('prevBtn').disabled = (n === 0);
+    document.getElementById('nextBtn').disabled = (n === total - 1);
+    document.getElementById('bar-fill').style.width = ((n + 1) / total * 100) + '%';
+    document.getElementById('count').innerHTML = '<b>' + pad(n + 1) + '</b> / ' + pad(total);
+    if (history.replaceState) history.replaceState(null, '', '#' + (n + 1));
+  };
+  window.go = function(dir){ show(current + dir); };
+  window.fs = function(){
+    var d = document;
+    if (d.fullscreenElement) { d.exitFullscreen && d.exitFullscreen(); }
+    else { d.documentElement.requestFullscreen && d.documentElement.requestFullscreen(); }
+  };
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key === 'f' || e.key === 'F') fs();
+  });
+  // 触屏滑动翻页
+  var x0 = null;
+  document.getElementById('stage').addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+  document.getElementById('stage').addEventListener('touchend', function(e){
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 46) go(dx < 0 ? 1 : -1);
+    x0 = null;
+  }, {passive:true});
+
+  fit();
+  var h = parseInt((location.hash || '').replace('#',''), 10);
+  show(isNaN(h) ? 0 : h - 1);
+})();
+/* 案例图点击放大 */
+(function(){
+  var lb = document.createElement('div');
+  lb.id = 'lightbox';
+  lb.innerHTML = '<img alt="">';
+  document.body.appendChild(lb);
+  lb.addEventListener('click', function(){ lb.classList.remove('show'); });
+  document.addEventListener('click', function(e){
+    var img = e.target && e.target.closest ? e.target.closest('.shot img, .slide-item img') : null;
+    if (img) { lb.firstChild.src = img.src; lb.classList.add('show'); }
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') lb.classList.remove('show'); });
+})();
+/* 轮播：自动播放 + 箭头 + 圆点，悬停暂停 */
+(function(){
+  var cars = document.querySelectorAll('.carousel');
+  for (var c = 0; c < cars.length; c++) (function(car){
+    var slides = car.querySelector('.slides'),
+        items = car.querySelectorAll('.slide-item'),
+        dots = car.querySelector('.c-dots'), idx = 0, timer = null, n = items.length;
+    for (var i = 0; i < n; i++) (function(j){
+      var d = document.createElement('i');
+      d.addEventListener('click', function(){ go(j); reset(); });
+      dots.appendChild(d);
+    })(i);
+    function go(i){
+      idx = (i + n) % n;
+      slides.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      var ds = dots.children;
+      for (var k = 0; k < ds.length; k++) ds[k].className = (k === idx) ? 'on' : '';
+    }
+    function reset(){
+      if (timer) clearInterval(timer);
+      if (n > 1) timer = setInterval(function(){ go(idx + 1); }, 4000);
+    }
+    car.querySelector('.c-nav.prev').addEventListener('click', function(){ go(idx - 1); reset(); });
+    car.querySelector('.c-nav.next').addEventListener('click', function(){ go(idx + 1); reset(); });
+    car.addEventListener('mouseenter', function(){ if (timer) clearInterval(timer); });
+    car.addEventListener('mouseleave', reset);
+    go(0); reset();
+  })(cars[c]);
+})();
+</script>
+
+<script id="ladder-js">
+(function(){
+"use strict";
+/* ---------- 数据：三阶六环 / 四层素养 / 四档权限 / 三大板块 ---------- */
+var LINKS=[
+ {id:"环1",name:"问题化与背景建构",short:"问题化",phase:"pre"},
+ {id:"环2",name:"方案设计与预注册",short:"方案设计",phase:"pre"},
+ {id:"环3",name:"操作执行与安全",short:"操作执行",phase:"in"},
+ {id:"环4",name:"现场观察与异常捕捉",short:"现场观察",phase:"in"},
+ {id:"环5",name:"数据处理与论证",short:"数据分析",phase:"post"},
+ {id:"环6",name:"表达·评价·反思",short:"表达反思",phase:"post"}];
+var PC={pre:"#1F5F73",in:"#A6242C",post:"#9A7524"};
+var PHCN={pre:"实验前",in:"实验中",post:"实验后"};
+var LEVELS=[{k:"L1",n:"使用"},{k:"L2",n:"校验"},{k:"L3",n:"共创"},{k:"L4",n:"治理"}];
+var TIERS=[{k:0,n:"禁止",c:"#A6242C"},{k:1,n:"提示式",c:"#9A7524"},{k:2,n:"协作式",c:"#1F5F73"},{k:3,n:"委托式",c:"#3E6B4F"}];
+/* 同一学期内的三大板块：cap = 该板块各环节的许可上限，y = 素养目标层级，z = 实际使用档位 */
+var STAGES=[
+ {name:"基础实验",sub:"第 1–6 周 · 规范与单项技能",
+  cap:[2,2,0,0,2,1], y:[0,0,0,0,1,0], z:[1,1,0,0,1,1]},
+ {name:"综合实验",sub:"第 7–13 周 · 自主设计与多技术整合",
+  cap:[3,2,0,1,3,2], y:[1,1,1,1,2,1], z:[2,2,0,1,2,2]},
+ {name:"毕设前准备",sub:"第 14–18 周 · 真题真做与开题答辩",
+  cap:[3,3,0,1,3,3], y:[2,2,3,3,3,3], z:[3,3,0,1,3,3]}];
+var ROLES=[
+ {id:"R1",ph:"pre",name:"文献情报官",en:"Librarian",link:0,tier:3,
+  does:"检索文献、生成综述骨架、汇总同类研究的处理条件与对照设置。",
+  not:"不替你判断这个问题在现有设备与学时内能不能做。",
+  check:"未溯源引用一律视为无效引用，每条引文人工回到原文。",
+  ex:"让 AI 列出 5 种酒精浓度对水蚤心率的影响研究，逐条核对 DOI 与真实浓度梯度。"},
+ {id:"R2",ph:"pre",name:"苏格拉底提问者",en:"Socratic prompter",link:0,tier:3,
+  does:"只追问不给答案：你的因变量可测吗？换成对照组还成立吗？",
+  not:"不生成问题陈述与假设的结论文本。",
+  check:"追问链完整留档，作为提示词日志的评分对象。",
+  ex:"要求它一次只问一个问题、不许给建议，直到你的假设可证伪。"},
+ {id:"R3",ph:"pre",name:"方案批判对手",en:"Red team",link:1,tier:2,
+  does:"专挑设计漏洞：混淆变量、对照缺失、把技术重复当生物学重复。",
+  not:"不代写终版方案，也不提供所谓更好的模板方案。",
+  check:"对每条攻击写明接受或拒绝及理由，拒绝也要写。",
+  ex:"指令它找出这个方案的三个致命缺陷，并指出哪一处的 n 是假的。"},
+ {id:"R4",ph:"pre",name:"操作预演教练",en:"Rehearsal coach",link:1,tier:1,
+  does:"实验前口述流程、解释仪器原理、生成安全与废液处置自查清单。",
+  not:"不提供现场可改的试剂浓度、转速、温度参数。",
+  check:"预演清单须教师签字确认后方可带入实验室。",
+  ex:"无菌操作七步先向 AI 复述一遍，再由它指出漏项。"},
+ {id:"R5",ph:"pre",name:"预注册管理员",en:"Pre-registration clerk",link:1,tier:2,
+  does:"把假设、剔除规则与分析计划固化成带时间戳的不可编辑版本。",
+  not:"不在结果出来后协助修改假设。",
+  check:"报告阶段核对版本，防止事后改口。",
+  ex:"提交预期结果与数据剔除标准并锁定版本。"},
+ {id:"R6",ph:"in",name:"现场记录员",en:"Recorder",link:2,tier:1,
+  does:"语音转写、时间戳打点、影像归档，只做形式转换。",
+  not:"不判断现象意义，也不替你决定记或不记。",
+  check:"原始记录仍然手写，电子件只作备份。",
+  ex:"口述第 3 孔边缘转黄，AI 只负责打时间戳。"},
+ {id:"R7",ph:"in",name:"术语查询员",en:"Terminology lookup",link:2,tier:1,
+  does:"英文名、单位换算、说明书与原理性解释。",
+  not:"一律不回答该加多少、离心多久、调几度。",
+  check:"参数与安全类问题必须举手找教师，日志可核对。",
+  ex:"问 Tris-HCl 的 pH 标定原理可以，问该调到多少不行。"},
+ {id:"R8",ph:"in",name:"延后提问箱",en:"Deferred-query queue",link:3,tier:1,
+  does:"接收问题并排队，等观察记录封存后才作答。",
+  not:"不做即时解释，避免先验框架吞掉你的观察。",
+  check:"延后提问双联单：观察联先封存，问询联后提交，比对时间戳。",
+  ex:"把这是不是污染投进队列，写完自己的观察再问。"},
+ {id:"R9",ph:"post",name:"分析伙伴",en:"Analyst",link:4,tier:3,
+  does:"清洗脚本、统计方法候选、图表类型建议与批量计算。",
+  not:"不替你决定样本量、剔除规则与前提检验结论。",
+  check:"双轨验证：AI 结果与手算关键统计量比对；每图标明 SD/SE/CI。",
+  ex:"AI 给出 t 检验结果后，手算两组均值与标准误核对量级。"},
+ {id:"R10",ph:"post",name:"替代解释生成器",en:"Alternative explanations",link:4,tier:2,
+  does:"对同一结果生成三种竞争性解释及各自的检验推论。",
+  not:"不排序哪个解释最可能对。",
+  check:"每种解释必须配一个可排除它的实验方案。",
+  ex:"除酒精抑制心率外，还要考虑渗透压、温度漂移与个体大小。"},
+ {id:"R11",ph:"post",name:"图像初筛员",en:"Vision pre-screen",link:4,tier:3,
+  does:"菌落与细胞计数、电泳条带识别的初筛与批量标注。",
+  not:"其结果不得直接采信。",
+  check:"百分之百人工复核，并记录人机差异率作为审计材料。",
+  ex:"AI 计 246 个菌落，人工复核发现把气泡与杂质颗粒计入了。"},
+ {id:"R12",ph:"post",name:"表达教练",en:"Writing coach",link:5,tier:2,
+  does:"挑表达不清、指代不明、结构失衡，只到语言层。",
+  not:"不改写主张与结论，不代写讨论段。",
+  check:"报告中主张段落须标注为自写，并与日志一致。",
+  ex:"只允许这句话指代不明级别的建议，禁止给替换句。"},
+ {id:"R13",ph:"post",name:"模拟答辩评审",en:"Mock examiner",link:5,tier:2,
+  does:"扮演最挑剔的评委连续追问，暴露论证断点。",
+  not:"不透露评分细则，也不替你准备标准答案。",
+  check:"与教师实际评分对比，偏差计入反思作业。",
+  ex:"让它问十个最难回答的问题，标出你答不出的那几处。"},
+ {id:"R14",ph:"post",name:"元认知访谈员",en:"Metacognition interviewer",link:5,tier:1,
+  does:"访谈哪一步你已经不再需要我，生成使用声明草稿。",
+  not:"不替你写反思正文。",
+  check:"声明与提示词日志逐条核对，不一致按违规处理。",
+  ex:"输出本实验的 AI 使用清单，学生修订后签名负责。"}];
+/* 同一环节同一档位内的横向散布，避免标记重叠 */
+(function(){
+  var g={},i,k;
+  for(i=0;i<ROLES.length;i++){ k=ROLES[i].link+"-"+ROLES[i].tier; (g[k]=g[k]||[]).push(i); }
+  for(k in g){ var a=g[k], n=a.length;
+    for(i=0;i<n;i++){ ROLES[a[i]].slot=(i-(n-1)/2)*0.36; ROLES[a[i]].grp=n; } }
+})();
+var BANNED=[
+ {name:"判断员",why:"这是不是污染、这条带是不是引物二聚体，属于现场观察的第一次表述权。",link:3},
+ {name:"参数员",why:"加多少、离心多久、调几度：模型幻觉在这里会直接转化为安全事故。",link:2},
+ {name:"决策员",why:"要不要重做、要不要剔除样本，责任必须由在场的人当场承担。",link:2}];
+var EVID=[
+ ["提出可证伪问题，三条以上引文完成人工溯源","主动要求 AI 只提问不作答，追问链留档","能判断问题在现有设备与学时内是否可做","会把权限上限本身当作研究对象，说清这个环节该给 AI 多深"],
+ ["区分生物学重复与技术重复，手写设计图表并标注 n 的指代","对 AI 攻击逐条写接受或拒绝及理由","预设失败判据与剔除规则，并锁定预注册版本","主动降档：宁可少用 AI 也要保住设计否决权"],
+ ["独立完成操作并通过现场观察单","偏离方案时主动报告并记录","终止实验的决定由本人当场作出","拒绝用 AI 代答参数，并把偏离写成可交接记录"],
+ ["原始记录手写且含时间戳","异常现象清单含非预期结果","不利结果不删除、不修饰，并能说明为何不接受 AI 解释","主动封存观察联，说明为什么不让 AI 提前介入"],
+ ["手算关键统计量与 AI 结果双轨比对","图像识别差异率有记录，结论强度定级","能指出 AI 统计建议不满足哪条前提并改判","公开人机差异率，并据此修订下一轮方案"],
+ ["主张段落标注自写并提交使用声明","答辩追问能应答且不推给工具","对 AI 初评分提出申诉并成功","为整份报告署名担责，并写明哪些部分今后不再需要 AI"]];
+/* ---------- 画布与相机 ---------- */
+var root=document.getElementById("ladder"), box=document.getElementById("l3d"),
+    cv=document.getElementById("l3d-cv"), ctx=cv.getContext("2d"),
+    info=document.getElementById("l3d-info"), tip=document.getElementById("l3d-tip");
+var W=0,H=0,DPR=1,UX=126,UY=94,UZ=100,OX=0,OY=0;
+var cam={yaw:-0.58,pitch:0.40,zoom:0.92,tyaw:-0.58,tpitch:0.40,tzoom:0.92,ortho:false,ox:0.445,oy:0.505};
+var st={stage:2,roles:true,ban:false,grid:true,phase:"all",sel:null,
+        anim:{y:STAGES[2].y.slice(),z:STAGES[2].cap.slice()}};
+var hits=[],active=true,scaleF=1;
+
+function measure(){
+  var cw=box.clientWidth||1, ch=box.clientHeight||1;
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=cw; H=ch;
+  cv.width=Math.round(cw*DPR); cv.height=Math.round(ch*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  OX=W*cam.ox; OY=H*cam.oy;
+  var r=cv.getBoundingClientRect();
+  scaleF=(r.width&&cv.clientWidth)?(r.width/cv.clientWidth):1;
+}
+function world(i,j,k){ return {x:(i-2.5)*UX,y:j*UY,z:(k-1.5)*UZ}; }
+function proj(p){
+  var cy=Math.cos(cam.yaw),sy=Math.sin(cam.yaw),cp=Math.cos(cam.pitch),sp=Math.sin(cam.pitch);
+  var px=p.x*cy+p.z*sy, pz=-p.x*sy+p.z*cy, py=p.y*cp-pz*sp, dz=p.y*sp+pz*cp;
+  var s=cam.ortho?cam.zoom:1500/(1500+dz+600)*cam.zoom;
+  return {x:OX+px*s,y:OY-py*s,d:dz,s:s};
+}
+function pt(i,j,k){ return proj(world(i,j,k)); }
+function dim(ph){ return st.phase!=="all" && st.phase!==ph; }
+function cap(i){ return STAGES[st.stage].cap[i]; }
+function isOpen(R){ return R.tier<=STAGES[st.stage].cap[R.link]; }
+
+/* ---------- 绘制小工具 ---------- */
+function rgba(hex,a){ var n=parseInt(hex.slice(1),16);
+  return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")"; }
+function seg(a,b,c,w,d){ ctx.save(); ctx.beginPath(); ctx.setLineDash(d||[]);
+  ctx.strokeStyle=c; ctx.lineWidth=w||1; ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.restore(); }
+function path(ps,c,w,d){ ctx.save(); ctx.beginPath(); ctx.setLineDash(d||[]);
+  ctx.strokeStyle=c; ctx.lineWidth=w||1; ctx.lineJoin="round";
+  for(var i=0;i<ps.length;i++){ if(i) ctx.lineTo(ps[i].x,ps[i].y); else ctx.moveTo(ps[i].x,ps[i].y); }
+  ctx.stroke(); ctx.restore(); }
+function face(a,b,c,d,f,s){ ctx.save(); ctx.beginPath();
+  ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(c.x,c.y); ctx.lineTo(d.x,d.y); ctx.closePath();
+  if(f){ctx.fillStyle=f;ctx.fill();} if(s){ctx.strokeStyle=s;ctx.lineWidth=1;ctx.stroke();} ctx.restore(); }
+function bead(p,r,f,s,lw){ ctx.save(); ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+  if(f){ctx.fillStyle=f;ctx.fill();} if(s){ctx.strokeStyle=s;ctx.lineWidth=lw||1;ctx.stroke();} ctx.restore(); }
+function dia(p,r,f,s,lw){ ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(Math.PI/4);
+  if(f){ctx.fillStyle=f;ctx.fillRect(-r,-r,r*2,r*2);}
+  ctx.strokeStyle=s; ctx.lineWidth=lw||1; ctx.strokeRect(-r,-r,r*2,r*2); ctx.restore(); }
+function halo(t,x,y,c,sz,al,bold){ ctx.save(); ctx.lineJoin="round"; ctx.lineWidth=4;
+  ctx.strokeStyle="rgba(255,255,255,.92)"; ctx.font=(bold?"700 ":"400 ")+(sz||15)+'px "Microsoft YaHei","微软雅黑","PingFang SC",sans-serif'; ctx.textAlign=al||"center"; ctx.textBaseline="middle";
+  ctx.strokeText(t,x,y); ctx.fillStyle=c; ctx.fillText(t,x,y); ctx.restore(); }
+function txt(t,x,y,c,sz,al,bold){ ctx.save(); ctx.fillStyle=c;
+  ctx.font=(bold?"700 ":"400 ")+(sz||15)+'px "Microsoft YaHei","微软雅黑","PingFang SC",sans-serif';
+  ctx.textAlign=al||"center"; ctx.textBaseline="middle"; ctx.fillText(t,x,y); ctx.restore(); }
+
+/* ---------- 主绘制 ---------- */
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#FFFFFF"); g.addColorStop(1,"#F5F5F2");
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  hits.length=0;
+  var i,k,p;
+
+  /* 1 底面相位色块 */
+  for(i=0;i<6;i++){
+    var ph=LINKS[i].phase, col=PC[ph];
+    face(pt(i-0.5,0,-0.5),pt(i+0.5,0,-0.5),pt(i+0.5,0,3.5),pt(i-0.5,0,3.5),
+         rgba(col,dim(ph)?0.03:0.10),rgba(col,dim(ph)?0.12:0.34));
+  }
+  /* 2 网格 */
+  if(st.grid){
+    for(i=0;i<6;i++) seg(pt(i-0.5,0,-0.5),pt(i-0.5,0,3.5),"rgba(22,32,42,.12)",1);
+    for(k=0;k<4;k++) seg(pt(-0.5,0,k-0.5),pt(5.5,0,k-0.5),"rgba(22,32,42,.10)",1);
+  }
+  /* 3 三根轴 */
+  seg(pt(-0.5,0,-0.5),pt(5.7,0,-0.5),"#2A070C",1.8);
+  seg(pt(-0.5,0,-0.5),pt(-0.5,3.5,-0.5),"#3E6B4F",1.8);
+  seg(pt(-0.5,0,-0.5),pt(-0.5,0,3.6),"#9A7524",1.8,[6,5]);
+  /* 4 板块名（后缘） */
+  var gp=[["pre",0.5],["in",2.5],["post",4.5]];
+  for(i=0;i<3;i++){
+    p=pt(gp[i][1],0,-0.72);
+    halo(PHCN[gp[i][0]],p.x,p.y-10,dim(gp[i][0])?"#BCC1C6":PC[gp[i][0]],14,"center",true);
+  }
+  /* 5 素养层级刻度（左侧） */
+  if(cam.pitch<1.35){
+    for(k=0;k<4;k++){
+      p=pt(-0.62,k,-0.5);
+      halo(LEVELS[k].k,p.x-68,p.y-8,"#3E6B4F",15,"center",true);
+      halo(LEVELS[k].n,p.x-68,p.y+8,"#8A9096",12.5);
+      seg(pt(-0.62,k,-0.5),pt(-0.5,k,-0.5),"rgba(62,107,79,.5)",1);
+    }
+  }
+  for(k=0;k<4;k++){
+    var pz2=pt(-0.62,-0.06,k);
+    seg(pt(-0.5,0,k),pz2,"rgba(154,117,36,.45)",1);
+    halo("Z"+k+" "+TIERS[k].n,pz2.x-14,pz2.y+13,TIERS[k].c,13.5,"right",true);
+  }
+  /* 6 许可上限脊线 */
+  var ridge=[];
+  for(i=0;i<6;i++){
+    var c4=PC[LINKS[i].phase], dm=dim(LINKS[i].phase), m=cap(i);
+    seg(pt(i-0.44,0,m+0.30),pt(i+0.44,0,m+0.30),rgba(c4,dm?0.22:0.95),3.6);
+    ridge.push(pt(i,0,m+0.30));
+  }
+  path(ridge,"rgba(42,7,12,.5)",1.6,[7,6]);
+  /* 7 角色标记（贴地，按深度远→近） */
+  if(st.roles && cam.tpitch>0.22){
+    var order=[];
+    for(i=0;i<ROLES.length;i++) order.push(i);
+    order.sort(function(a,b){ return ROLES[a].tier-ROLES[b].tier; });
+    for(k=0;k<order.length;k++){
+      var R=ROLES[order[k]], d3=dim(R.ph), open=isOpen(R);
+      var wd=world(R.link,0.02,R.tier); wd.x+=R.slot*UX;
+      p=proj(wd);
+      var isSel=st.sel&&st.sel.type==="role"&&st.sel.id===R.id;
+      var fill=(d3||!open)?null:rgba(PC[R.ph],0.95);
+      var stroke=isSel?"#2A070C":((d3||!open)?"#A9B0B6":"rgba(255,255,255,.92)");
+      dia(p,isSel?9:(d3?5:6.6),fill,stroke,isSel?2.6:1.4);
+      if(!d3&&open) txt(R.id,p.x,p.y+15,rgba(PC[R.ph],0.95),12);
+      else if(!d3) txt(R.id,p.x,p.y+15,"#AEB4B9",11);
+      hits.push({x:p.x,y:p.y,r:13,type:"role",id:R.id,label:R.id+" "+R.name+(open?"":"（本板块未开放）")});
+    }
+  }
+  /* 8 进阶轨迹 */
+  var tr=[],sh=[];
+  for(i=0;i<6;i++){
+    var yy=st.anim.y[i], zz=Math.min(st.anim.z[i],cap(i));
+    tr.push(proj(world(i,yy,zz))); sh.push(proj(world(i,0,zz)));
+  }
+  for(i=0;i<6;i++){
+    var dm2=dim(LINKS[i].phase);
+    seg(sh[i],tr[i],rgba(PC[LINKS[i].phase],dm2?0.12:0.45),1.2,[4,4]);
+    bead(sh[i],dm2?2.6:4,rgba(PC[LINKS[i].phase],dm2?0.2:0.55));
+  }
+  path(tr,"#2A070C",3);
+  for(i=0;i<6;i++){
+    var q=tr[i], dm3=dim(LINKS[i].phase);
+    var sel=st.sel&&st.sel.type==="node"&&st.sel.i===i;
+    bead(q,sel?10:(dm3?5:7),dm3?"#C9CDD1":"#8E1D26",sel?"#2A070C":"#FFFFFF",sel?3:2);
+    if(!dm3) halo(LEVELS[Math.round(st.anim.y[i])].k,q.x+17,q.y-13,"#2A070C",13.5,"left",true);
+    hits.push({x:q.x,y:q.y,r:15,type:"node",i:i,label:LINKS[i].id+" 目标 "+LEVELS[Math.round(st.anim.y[i])].k});
+  }
+  /* 9 禁止角色 */
+  if(st.ban){
+    for(i=0;i<BANNED.length;i++){
+      var B=BANNED[i], bp=proj(world(B.link+(i-1)*0.3,-0.02,0));
+      ctx.save(); ctx.strokeStyle="#A6242C"; ctx.lineWidth=2.2;
+      ctx.beginPath(); ctx.arc(bp.x,bp.y,8,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bp.x-5.6,bp.y-5.6); ctx.lineTo(bp.x+5.6,bp.y+5.6); ctx.stroke(); ctx.restore();
+      txt(B.name,bp.x,bp.y+18,"#A6242C",12.5);
+      hits.push({x:bp.x,y:bp.y,r:13,type:"ban",idx:i,label:"禁止 "+B.name});
+    }
+  }
+  /* 10 环节名（前缘，最后画保证不被压住） */
+  for(i=0;i<6;i++){
+    p=pt(i,0,4.32);
+    var on=!dim(LINKS[i].phase);
+    seg(pt(i,0,3.55),pt(i,0,4.06),"rgba(22,32,42,.22)",1);
+    bead(pt(i,0,4.06),3.2,on?PC[LINKS[i].phase]:"#C9CDD1");
+    halo(LINKS[i].id,p.x,p.y+13,on?"#1A1D20":"#AEB4B9",16,"center",true);
+    halo(LINKS[i].short,p.x,p.y+30,on?"#5A6167":"#BCC1C6",13);
+  }
+}
+/* ---------- 交互 ---------- */
+function local(e){
+  var r=cv.getBoundingClientRect();
+  return {x:(e.clientX-r.left)/(scaleF||1), y:(e.clientY-r.top)/(scaleF||1)};
+}
+function pick(mx,my){
+  var best=null,bd=1e9;
+  for(var i=0;i<hits.length;i++){
+    var h=hits[i], d=Math.sqrt((h.x-mx)*(h.x-mx)+(h.y-my)*(h.y-my));
+    if(d<h.r+5 && d<bd){ bd=d; best=h; }
+  }
+  return best;
+}
+var drag=null;
+cv.addEventListener("pointerdown",function(e){
+  try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+  drag={x:e.clientX,y:e.clientY,yaw:cam.yaw,pit:cam.pitch,moved:0};
+  cv.classList.add("dragging");
+});
+cv.addEventListener("pointermove",function(e){
+  if(drag){
+    var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    drag.moved=Math.max(drag.moved,Math.abs(dx)+Math.abs(dy));
+    cam.yaw=drag.yaw+dx*0.0075;
+    cam.pitch=Math.max(-0.15,Math.min(1.45,drag.pit+dy*0.0055));
+    cam.tyaw=cam.yaw; cam.tpitch=cam.pitch;
+    return;
+  }
+  var m=local(e), h=pick(m.x,m.y);
+  if(h){ tip.textContent=h.label; tip.style.left=h.x+"px"; tip.style.top=h.y+"px"; tip.style.opacity="1"; }
+  else tip.style.opacity="0";
+});
+window.addEventListener("pointerup",function(e){
+  if(drag&&drag.moved<5){
+    var m=local(e), h=pick(m.x,m.y);
+    if(h) choose(h); else { st.sel=null; showHome(); }
+  }
+  drag=null; cv.classList.remove("dragging");
+});
+cv.addEventListener("wheel",function(e){
+  e.preventDefault();
+  cam.tzoom=Math.max(0.5,Math.min(2.0,cam.tzoom*(e.deltaY>0?0.93:1.075)));
+},{passive:false});
+function choose(h){
+  if(h.type==="role"){ st.sel={type:"role",id:h.id}; showRole(h.id); }
+  else if(h.type==="node"){ st.sel={type:"node",i:h.i}; showLink(h.i); }
+  else { st.sel={type:"ban",idx:h.idx}; showBan(h.idx); }
+}
+
+/* ---------- 右侧详情面板 ---------- */
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function pill(t){ return '<span class="pill" style="background:'+TIERS[t].c+'">Z'+t+' '+TIERS[t].n+'</span>'; }
+function closeBtn(){ return '<button class="x" type="button" id="l3d-x">返回</button>'; }
+function bindClose(){ var b=document.getElementById("l3d-x"); if(b) b.onclick=function(){ st.sel=null; showHome(); }; }
+function openCount(){ var n=0; for(var i=0;i<ROLES.length;i++) if(isOpen(ROLES[i])) n++; return n; }
+
+function showHome(){
+  var s=STAGES[st.stage], my=0;
+  for(var i=0;i<6;i++){ if(s.y[i]>my) my=s.y[i]; }
+  var h='<h3>读图三句话</h3><div class="en">HOW TO READ</div><ul>'+
+   '<li><b>横轴</b>是任务进程：实验前三阶六环。<b>纵轴</b>是素养层级 L1→L4。<b>深度轴</b>是权限档 0→3，代表 AI 被允许介入多深。</li>'+
+   '<li>实线折线是本板块的<b>素养目标轨迹</b>，虚线脊线是<b>许可上限</b>。从基础实验到毕设前准备，两条线一起向外、向上扩张。</li>'+
+   '<li>关键在环3、环4：脊线始终顶在 Z0、Z1，纵轴却要求到 L4。<b>最深的自主，发生在 AI 最不被允许的地方。</b></li></ul>'+
+   '<h4>当前板块</h4><p><b>'+esc(s.name)+'</b>　'+esc(s.sub)+'<br>素养目标至 '+LEVELS[my].k+'，本板块开放 <b>'+openCount()+' / 14</b> 个角色</p>'+
+   '<h4>AI 角色总览</h4><p style="font-size:13.5px;color:#8A9096">拖拽旋转 · 滚轮缩放 · 点击实心菱形查看详情；灰色空心为本板块尚未开放</p>';
+  var grp=[["pre","实验前 · 5 个"],["in","实验中 · 3 个，均为非判断性"],["post","实验后 · 6 个"]];
+  for(var g=0;g<grp.length;g++){
+    h+='<div class="grp-cap">'+grp[g][1]+'</div>';
+    for(var i2=0;i2<ROLES.length;i2++){
+      var R=ROLES[i2]; if(R.ph!==grp[g][0]) continue;
+      var op=isOpen(R);
+      h+='<div class="rl'+(op?'':' off')+'" data-r="'+R.id+'"><i style="background:'+(op?PC[R.ph]:'#C9CDD1')+'"></i>'+
+         '<span><b>'+R.id+' '+esc(R.name)+'</b>　'+LINKS[R.link].id+' · Z'+R.tier+'</span>'+
+         '<span class="tag">'+(op?'开放':'未开放')+'</span></div>';
+    }
+  }
+  h+='<div class="grp-cap">红线 · 3 个禁止角色</div>';
+  for(var b=0;b<BANNED.length;b++)
+    h+='<div class="rl" data-b="'+b+'"><i style="background:#A6242C;transform:none;border-radius:50%"></i><span>'+esc(BANNED[b].name)+'　'+LINKS[BANNED[b].link].id+'</span><span class="tag">禁止</span></div>';
+  h+='<h4>讲稿要点 · 90 秒</h4><p class="ex">1. 设计单位不是工具也不是流程，而是<b>单项认知任务的可外包性</b>。<br>'+
+     '2. 先规定 AI 扮演哪个角色，再规定它能用多深；伦理问题就变成了可评分的任务结构问题。<br>'+
+     '3. 三大板块的处方不同：基础实验窄许可、重规范与动手；综合实验放开设计与分析；毕设前准备全面开放但审计最严。<br>'+
+     '4. 每个板块一次无 AI 基线，用来检验这条轨迹是真爬升，还是被 AI 抬起来的。</p>';
+  info.innerHTML=h; bindList();
+}
+function bindList(){
+  var rs=info.querySelectorAll("[data-r]");
+  for(var i=0;i<rs.length;i++) rs[i].onclick=function(){ var id=this.getAttribute("data-r"); st.sel={type:"role",id:id}; showRole(id); };
+  var bs=info.querySelectorAll("[data-b]");
+  for(var j=0;j<bs.length;j++) bs[j].onclick=function(){ var k=parseInt(this.getAttribute("data-b"),10); st.sel={type:"ban",idx:k}; showBan(k); };
+}
+function showRole(id){
+  var R=null; for(var i=0;i<ROLES.length;i++) if(ROLES[i].id===id) R=ROLES[i];
+  if(!R) return;
+  var op=isOpen(R);
+  info.innerHTML=closeBtn()+'<h3>'+R.id+' '+esc(R.name)+'</h3>'+
+   '<div class="en">'+esc(R.en)+' · '+PHCN[R.ph]+' · '+LINKS[R.link].id+'</div>'+pill(R.tier)+
+   '<span class="pill" style="background:'+(op?'#3E6B4F':'#8A9096')+'">'+(op?'本板块开放':'本板块未开放')+'</span>'+
+   '<h4>可以做什么</h4><p>'+esc(R.does)+'</p>'+
+   '<h4>不可以做什么</h4><p>'+esc(R.not)+'</p>'+
+   '<h4>强制校验动作</h4><p>'+esc(R.check)+'</p>'+
+   '<h4>综合实验示例</h4><p class="ex">'+esc(R.ex)+'</p>'+
+   '<h4>板块进度</h4><p style="font-size:14px">基础实验上限 Z'+STAGES[0].cap[R.link]+' → 综合实验 Z'+STAGES[1].cap[R.link]+' → 毕设前 Z'+STAGES[2].cap[R.link]+'</p>';
+  bindClose();
+}
+function showBan(idx){
+  var B=BANNED[idx];
+  info.innerHTML=closeBtn()+'<h3>禁止角色 · '+esc(B.name)+'</h3>'+
+   '<div class="en">FORBIDDEN · '+LINKS[B.link].id+' '+esc(LINKS[B.link].name)+'</div>'+pill(0)+
+   '<h4>为什么禁止</h4><p>'+esc(B.why)+'</p>'+
+   '<h4>替代做法</h4><p>现场不确定一律举手指向教师；问题投入延后提问箱，等原始记录封存后再问。</p>'+
+   '<h4>板块进度</h4><p style="font-size:14px">三大板块一律禁止，许可上限不在此处上移。</p>';
+  bindClose();
+}
+function showLink(i){
+  var L=LINKS[i], s=STAGES[st.stage], lv=LEVELS[Math.round(s.y[i])], ev=EVID[i], m=cap(i);
+  var h=closeBtn()+'<h3>'+L.id+' '+esc(L.name)+'</h3><div class="en">环节坐标 · 素养目标与达标证据</div>'+
+   '<span class="pill" style="background:'+PC[L.phase]+'">'+PHCN[L.phase]+'</span>'+pill(m)+
+   '<h4>本板块目标</h4><p><b>'+lv.k+' '+lv.n+'</b>　许可上限 Z'+m+(m===0?'（红线条，三大板块全程零权限）':'')+'</p>'+
+   '<h4>上限随板块上移</h4><p style="font-size:14px">基础实验 Z'+STAGES[0].cap[i]+' → 综合实验 Z'+STAGES[1].cap[i]+' → 毕设前准备 Z'+STAGES[2].cap[i]+'</p>'+
+   '<h4>逐级达标证据</h4><ul>';
+  for(var j=0;j<ev.length;j++) h+='<li><b>'+LEVELS[j].k+' '+LEVELS[j].n+'</b>：'+esc(ev[j])+'</li>';
+  h+='</ul><h4>说明</h4><p class="ex">该环节的纵轴高度与深度轴权限无关：'+
+   (m<=1?'即使 AI 几乎不介入，仍要求学生达到 L4 治理级，因为这里的素养体现为知道不该用与当场担责。':
+    '进阶表现为在更深的介入档位上，仍然保持否决能力。')+'</p>';
+  info.innerHTML=h; bindClose();
+}
+
+/* ---------- 控件 ---------- */
+function $(id){ return document.getElementById(id); }
+var semIn=$("l3d-sem"), semTx=$("l3d-semtxt");
+function setStage(v,keep){
+  st.stage=v; semIn.value=String(v); semTx.textContent=STAGES[v].name;
+  if(!keep){ st.anim.y=STAGES[v].y.slice(); st.anim.z=STAGES[v].cap.slice(); }
+  else { st.anim.z=STAGES[v].cap.slice(); }
+  if(!st.sel) showHome();
+}
+semIn.addEventListener("input",function(){ setStage(parseInt(this.value,10),true); });
+var playBtn=$("l3d-play"), timer=null;
+playBtn.onclick=function(){
+  if(timer){ clearInterval(timer); timer=null; playBtn.textContent="自动播放"; playBtn.classList.remove("on"); return; }
+  playBtn.textContent="暂停"; playBtn.classList.add("on"); setStage(0,false);
+  timer=setInterval(function(){
+    var n=(st.stage+1)%3; setStage(n,true);
+    if(n===2){ clearInterval(timer); timer=null; playBtn.textContent="自动播放"; playBtn.classList.remove("on"); }
+  },2800);
+};
+var VIEWS={iso:{y:-0.58,p:0.40,z:0.92,o:false,x:0.445,vy:0.505},top:{y:0,p:1.5708,z:0.72,o:true,x:0.50,vy:0.28},front:{y:0.0,p:0.05,z:0.90,o:false,x:0.445,vy:0.505}};
+var vbs=document.querySelectorAll("#ladder [data-view]");
+for(var v=0;v<vbs.length;v++) vbs[v].onclick=function(){
+  for(var q=0;q<vbs.length;q++) vbs[q].classList.remove("on");
+  this.classList.add("on");
+  var wd=VIEWS[this.getAttribute("data-view")];
+  cam.tyaw=wd.y; cam.tpitch=wd.p; cam.tzoom=wd.z; cam.ortho=wd.o; cam.ox=wd.x; cam.oy=wd.vy; measure();
+};
+var pbs=document.querySelectorAll("#ladder [data-ph]");
+for(var pb=0;pb<pbs.length;pb++) pbs[pb].onclick=function(){
+  for(var q2=0;q2<pbs.length;q2++) pbs[q2].classList.remove("on");
+  this.classList.add("on"); st.phase=this.getAttribute("data-ph");
+  if(!st.sel) showHome();
+};
+function tg(id,key){ var el=$(id); el.onclick=function(){ st[key]=!st[key]; el.classList.toggle("on",st[key]); }; }
+tg("l3d-tg-roles","roles"); tg("l3d-tg-ban","ban"); tg("l3d-tg-grid","grid");
+
+/* ---------- 循环与可见性 ---------- */
+function loop(){
+  cam.yaw+=(cam.tyaw-cam.yaw)*0.12;
+  cam.pitch+=(cam.tpitch-cam.pitch)*0.12;
+  cam.zoom+=(cam.tzoom-cam.zoom)*0.12;
+  for(var i=0;i<6;i++){
+    st.anim.y[i]+=(STAGES[st.stage].y[i]-st.anim.y[i])*0.1;
+    st.anim.z[i]+=(STAGES[st.stage].cap[i]-st.anim.z[i])*0.1;
+  }
+  if(active) draw();
+  requestAnimationFrame(loop);
+}
+function syncActive(){
+  var on=root.classList.contains("is-active")||!document.getElementById("dots");
+  if(on&&!active){ active=true; measure(); }
+  active=on;
+}
+if(window.MutationObserver){
+  new MutationObserver(syncActive).observe(root,{attributes:true,attributeFilter:["class"]});
+}
+window.addEventListener("resize",function(){ measure(); });
+measure(); setStage(st.stage,false); showHome(); syncActive(); requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
