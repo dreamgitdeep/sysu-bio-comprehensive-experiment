@@ -323,6 +323,51 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
 #framework .fr-foot b{color:var(--brand);}
 </style>
 
+<style id="data-css">
+/* 第 11 页 · 数据闭环示意图 */
+#data .loopfig{display:flex;flex-direction:column;justify-content:center;gap:16px;height:100%;min-height:0;padding-bottom:6px;}
+#data .loopfig svg{width:100%;height:auto;max-height:500px;display:block;margin:0 auto;}
+#data .loopfig svg text{font-family:var(--font-sans);}
+#data .loopfig svg .ct{font-family:var(--font-display);}
+#data .loopcap{margin:0;text-align:center;font-size:16px;line-height:1.6;color:var(--ink-2);letter-spacing:.3px;}
+#data .loopcap b{color:var(--brand);}
+@media print{#data .loopfig svg{max-height:470px}}
+</style>
+
+<style id="kb-css">
+/* 第 6 页 · AI 知识库：入库流程移到左下，右下留图片位 */
+#kb .list{font-size:19px;line-height:1.68;}
+#kb .list li{margin-bottom:2px;}
+#kb .timeline{gap:10px;}
+#kb .tl{padding-left:22px;}
+#kb .tl::before{bottom:-10px;}
+#kb .tl h5{font-size:18px;}
+#kb .tl p{font-size:16.5px;line-height:1.5;margin-top:2px;}
+#kb .panel{padding:18px 22px;}
+#kb .panel-title{font-size:24px;padding-bottom:10px;margin-bottom:12px;}#kb .panel--fig{display:flex;flex-direction:column;}
+#kb .shotfig{position:relative;flex:1;min-height:0;border:1px dashed var(--line-2);border-radius:8px;background:var(--paper-2);display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;}
+#kb .shotfig .hint{font-size:15px;line-height:1.85;color:var(--ink-3);}
+#kb .shotfig .hint b{color:var(--brand);font-weight:600;letter-spacing:.3px;}
+#kb .shotfig img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--paper);cursor:zoom-in;}
+</style>
+<style id="gallery-css">
+/* 第 8 页 · 虚拟展厅：案例表移到左下，右侧改为实景照片墙 */
+#gallery .panel{padding:18px 22px;}
+#gallery .panel-title{font-size:24px;padding-bottom:10px;margin-bottom:12px;}
+#gallery .list{font-size:19px;line-height:1.68;}
+#gallery .table{font-size:17px;}
+#gallery .table th{padding:9px 11px;}
+#gallery .table td{padding:10px 11px;}
+#gallery .linkbtn{padding:6px 14px;font-size:15px;}
+#gallery .note{font-size:16px;line-height:1.65;}
+#gallery .panel--photos{display:flex;flex-direction:column;}
+#gallery .photogrid{flex:1;min-height:0;display:grid;gap:12px;grid-template-columns:1fr 1.18fr;grid-template-rows:1fr 1fr;}
+#gallery .photo{position:relative;min-height:0;border:1px dashed var(--line-2);border-radius:8px;background:var(--paper-2);overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;}
+#gallery .photo--lead{grid-row:1 / span 2;}
+#gallery .photo .hint{font-size:14px;line-height:1.8;color:var(--ink-3);}
+#gallery .photo .hint b{display:block;margin-top:3px;color:var(--brand);font-weight:600;letter-spacing:.3px;font-size:15px;}
+#gallery .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--paper);cursor:zoom-in;}
+</style>
 <style id="plan-css">
 /* ============================================================
    第 5 页 · 建设模块堆叠图（仅作用于 #plan）
@@ -656,10 +701,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
             </ul>
           </div>
         </div>
-        <div class="fr-foot">同一段提示语只差一句话：「帮我写方案」是替代思考，「攻击我的方案」是加深思考，<b>所以角色要先于权限被规定</b>。逐条角色的完整边界与校验动作，见第 04 页交互图。</div>
       </div>
     </div>
-  </section></section>
+  </section>
 
   <!-- ========== 第 4 页 · 素养进阶三维体系（可交互） ========== -->
   <section class="slide" id="ladder">
@@ -807,7 +851,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
 
     <div class="slide-body g-side">
       <div class="col">
-        <div class="panel" style="flex:1;">
+        <div class="panel" style="flex:none;">
           <div class="panel-title"><span>这门课要培养的能力</span><span>COMPETENCY</span></div>
           <ul class="list">
             <li><b>规范操作能力：</b>实验原理理解、操作执行与现象记录</li>
@@ -816,6 +860,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
             <li><b>人机协作能力：</b>善用 AI 完成检索、分析与自评，并能审视 AI 输出</li>
             <li><b>科研素养：</b>实验伦理、生物安全与学术诚信</li>
           </ul>
+        </div>
+        <div class="panel" style="flex:1;">
+          <div class="panel-title"><span>入库流程</span><span>PIPELINE</span></div>
+          <div class="timeline">
+            <div class="tl"><h5>解析与提取</h5><p>文件解析、字符解析、图片提取</p></div>
+            <div class="tl"><h5>知识点同步</h5><p>形成可被 AI 调用、可溯源的知识颗粒</p></div>
+            <div class="tl"><h5>教师审核</h5><p>逐条把关权威性与表述准确性</p></div>
+            <div class="tl"><h5>发布与更新</h5><p>随教学反馈与高频问题持续补充</p></div>
+          </div>
         </div>
       </div>
 
@@ -828,13 +881,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
             <li><b>多模态扩充：</b>文档、图片、微课与标准操作视频同步入库</li>
           </ul>
         </div>
-        <div class="panel" style="flex:1;">
-          <div class="panel-title"><span>入库流程</span><span>PIPELINE</span></div>
-          <div class="timeline">
-            <div class="tl"><h5>解析与提取</h5><p>文件解析、字符解析、图片提取</p></div>
-            <div class="tl"><h5>知识点同步</h5><p>形成可被 AI 调用、可溯源的知识颗粒</p></div>
-            <div class="tl"><h5>教师审核</h5><p>逐条把关权威性与表述准确性</p></div>
-            <div class="tl"><h5>发布与更新</h5><p>随教学反馈与高频问题持续补充</p></div>
+        <div class="panel panel--fig" style="flex:1;">
+          <div class="panel-title"><span>界面示意</span><span>SCREENSHOT</span></div>
+          <div class="shotfig">
+            <span class="hint">图片位　<b>知识库入库流程图.png</b><br>放入课件同级目录后自动显示</span>
+            <img src="知识库入库流程图.png" alt="知识库入库流程图" onerror="this.remove()">
           </div>
         </div>
       </div>
@@ -872,9 +923,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
           <div class="panel-title"><span>优秀图谱案例</span><span>CASES</span></div>
           <div class="carousel">
             <div class="slides">
-              <div class="slide-item">案例图位 1</div>
-              <div class="slide-item">案例图位 2</div>
-              <div class="slide-item">案例图位 3</div>
+              <div class="slide-item"><img src="图谱案例-重难点知识图谱.png" alt="图谱案例：实验知识点网络与重难点标注"></div>
+              <div class="slide-item"><img src="图谱案例-项目任务问题三层.png" alt="图谱案例：项目-任务-问题 三层关联图谱"></div>
+              <div class="slide-item"><img src="图谱案例-多要素分层网络.png" alt="图谱案例：岗位-岗位能力-课程目标-项目-任务-任务点 多要素分层网络"></div>
             </div>
             <button class="c-nav prev" aria-label="上一张">‹</button>
             <button class="c-nav next" aria-label="下一张">›</button>
@@ -894,10 +945,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
       </div>
     </header>
     <div class="head-rule"></div>
-
     <div class="slide-body g-side">
       <div class="col">
-        <div class="panel" style="flex:1;">
+        <div class="panel" style="flex:none;">
           <div class="panel-title"><span>虚拟展厅</span><span>EXHIBITS</span></div>
           <ul class="list">
             <li><b>微课与原理动画</b>：核心知识点的可视化讲解，可反复观摩</li>
@@ -906,10 +956,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
             <li><b>3D / 全景展厅</b>：已有高校建成案例可直接引用，补足沉浸式学习场景</li>
           </ul>
         </div>
-      </div>
-
-      <div class="col">
-        <div class="panel" style="flex:1;">
+        <div class="panel" style="flex:none;">
           <div class="panel-title"><span>展厅案例</span><span>CASES · 超星 VR 展厅</span></div>
           <table class="table">
             <thead><tr><th style="width:38%">高校名称</th><th style="width:30%">课程名称</th><th>入口</th></tr></thead>
@@ -919,7 +966,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
               <tr><td><b>中国石油大学</b></td><td>语言康复学</td><td><a class="linkbtn" href="https://vr.chaoxing.com/#/showCustomerSpace?id=ODAwNTY" target="_blank" rel="noopener">进入展厅</a></td></tr>
             </tbody>
           </table>
-          <div class="note" style="margin-top:26px;">以上为超星 VR 展厅已建成案例，点击入口可直接查看其空间结构与布展方式，可借鉴到本课程展厅。</div>
+          <div class="note" style="margin-top:14px;">以上为超星 VR 展厅已建成案例，点击入口可直接查看其空间结构与布展方式，可借鉴到本课程展厅。</div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel panel--photos" style="flex:1;">
+          <div class="panel-title"><span>展厅实景</span><span>PHOTOS</span></div>
+          <div class="photogrid">
+            <div class="photo photo--lead">
+              <span class="hint">主图位<b>展厅实景-全景.png</b></span>
+              <img src="展厅实景-全景.png" alt="虚拟展厅全景" onerror="this.remove()">
+            </div>
+            <div class="photo">
+              <span class="hint">图位二<b>展厅实景-展位.png</b></span>
+              <img src="展厅实景-展位.png" alt="展位与作品陈列" onerror="this.remove()">
+            </div>
+            <div class="photo">
+              <span class="hint">图位三<b>展厅实景-互动.png</b></span>
+              <img src="展厅实景-互动.png" alt="学生现场互动" onerror="this.remove()">
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -941,7 +1008,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
         <div class="panel" style="flex:1;">
           <div class="panel-title"><span>任务类型</span><span>TYPES</span></div>
           <ul class="list list--lg">
-            <li><b>基础规范型：</b>微课 + 预习检测微任务 + 题库自测（容量 500+）+ 操作视频 AI 批阅（RNA / DNA 提取）</li>
+            <li><b>基础实验类：</b>Pre-class Self-study + Key Points Deep-dive + Experimental Skills Training + Review &amp; Growth</li>
             <li><b>综合设计型：</b>给定主题的实验设计与数据分析；CRISPR 基因编辑方案 AI 模拟评审</li>
             <li><b>开放探究型：</b>萌芽课题五节点链：选题（AI 荐题）→ 方案（AI 验证）→ 中期（过程数据）→ 海报 → 答辩</li>
           </ul>
@@ -953,7 +1020,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
           <div class="panel-title"><span>样例展示</span><span>SAMPLES · 稍后平台演示</span></div>
           <div class="carousel">
             <div class="slides">
-              <div class="slide-item">样例图位 1</div>
+              <div class="slide-item"><img src="任务引擎样例-四类任务.png" alt="任务引擎样例：Pre-class Self-study / Key Points Deep-dive / Experimental Skills Training / Review &amp; Growth 四类任务"></div>
               <div class="slide-item">样例图位 2</div>
               <div class="slide-item">样例图位 3</div>
             </div>
@@ -1040,11 +1107,57 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
       <div class="col">
         <div class="panel" style="flex:1;">
           <div class="panel-title"><span>数据闭环</span><span>LOOP</span></div>
-          <div class="timeline">
-            <div class="tl"><h5>数据采集</h5><p>各模块无感留存学习全过程数据</p></div>
-            <div class="tl"><h5>分析建模</h5><p>形成学情画像与课程运行指标</p></div>
-            <div class="tl"><h5>预警与反馈</h5><p>薄弱点定向推送补救资源，风险提示教师</p></div>
-            <div class="tl"><h5>教学改进</h5><p>反哺知识库、图谱与任务策略，优化评价体系</p></div>
+          <div class="loopfig">
+            <svg viewBox="0 0 860 500" role="img" aria-label="数据闭环示意图：数据采集、分析建模、预警与反馈、教学改进四步循环">
+              <defs>
+                <marker id="lpA" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#8E1D26"/></marker>
+                <marker id="lpB" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#9A7524"/></marker>
+              </defs>
+              <circle cx="430" cy="250" r="118" fill="none" stroke="rgba(22,32,42,.12)" stroke-width="1" stroke-dasharray="3 5"/>
+              <path d="M357.4 157 A118 118 0 0 1 502.6 157" fill="none" stroke="#8E1D26" stroke-width="2.5" marker-end="url(#lpA)"/>
+              <path d="M523 177.4 A118 118 0 0 1 523 322.6" fill="none" stroke="#8E1D26" stroke-width="2.5" marker-end="url(#lpA)"/>
+              <path d="M502.6 343 A118 118 0 0 1 357.4 343" fill="none" stroke="#8E1D26" stroke-width="2.5" marker-end="url(#lpA)"/>
+              <path d="M337 322.6 A118 118 0 0 1 337 177.4" fill="none" stroke="#9A7524" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#lpB)"/>
+              <text x="300" y="255" text-anchor="end" font-size="15" font-weight="700" fill="#9A7524">反哺</text>
+              <circle cx="430" cy="250" r="78" fill="#8E1D26"/>
+              <circle cx="430" cy="250" r="70" fill="none" stroke="#E8D3A6" stroke-width="1" stroke-dasharray="2 4" opacity=".75"/>
+              <text class="ct" x="430" y="246" text-anchor="middle" font-size="22" font-weight="700" fill="#FFFFFF">数据闭环</text>
+              <text x="430" y="268" text-anchor="middle" font-size="11" letter-spacing="2" fill="#E8D3A6">DATA LOOP</text>
+              <text x="430" y="286" text-anchor="middle" font-size="11" fill="#E8D3A6" opacity=".8">一轮 18 周</text>
+              <g>
+                <rect x="90" y="18" width="300" height="104" rx="10" fill="#F6F6F4" stroke="rgba(22,32,42,.12)"/>
+                <path d="M102 19.5 H378" stroke="#1F5F73" stroke-width="3" stroke-linecap="round"/>
+                <text x="108" y="52" font-size="16" font-weight="700" fill="#1F5F73">01</text>
+                <text x="140" y="52" font-size="20" font-weight="700" fill="#000000">数据采集</text>
+                <text x="108" y="74" font-size="14.5" fill="#2B2B2B">全过程数据留存</text>
+                <text x="108" y="93" font-size="12.5" fill="#5A5A5A">AI实践、任务点、任务引擎</text>
+                <text x="108" y="111" font-size="12.5" fill="#5A5A5A">章节学习、知识点学习、课程运行</text>
+              </g>
+              <g>
+                <rect x="470" y="18" width="300" height="104" rx="10" fill="#F6F6F4" stroke="rgba(22,32,42,.12)"/>
+                <path d="M482 19.5 H758" stroke="#9A7524" stroke-width="3" stroke-linecap="round"/>
+                <text x="488" y="52" font-size="16" font-weight="700" fill="#9A7524">02</text>
+                <text x="520" y="52" font-size="20" font-weight="700" fill="#000000">分析建模</text>
+                <text x="488" y="78" font-size="14.5" fill="#2B2B2B">形成学情画像与课程运行指标</text>
+                <text x="488" y="100" font-size="13.5" fill="#5A5A5A">掌握度矩阵 · 达成度 · 评分差</text>
+              </g>
+              <g>
+                <rect x="470" y="378" width="300" height="104" rx="10" fill="#F6F6F4" stroke="rgba(22,32,42,.12)"/>
+                <path d="M482 379.5 H758" stroke="#A6242C" stroke-width="3" stroke-linecap="round"/>
+                <text x="488" y="412" font-size="16" font-weight="700" fill="#A6242C">03</text>
+                <text x="520" y="412" font-size="20" font-weight="700" fill="#000000">预警与反馈</text>
+                <text x="488" y="438" font-size="14.5" fill="#2B2B2B">薄弱点定向推送补救资源</text>
+                <text x="488" y="460" font-size="13.5" fill="#5A5A5A">进度与学术诚信风险提示教师</text>
+              </g>
+              <g>
+                <rect x="90" y="378" width="300" height="104" rx="10" fill="#F6F6F4" stroke="rgba(22,32,42,.12)"/>
+                <path d="M102 379.5 H378" stroke="#8E1D26" stroke-width="3" stroke-linecap="round"/>
+                <text x="108" y="412" font-size="16" font-weight="700" fill="#8E1D26">04</text>
+                <text x="140" y="412" font-size="20" font-weight="700" fill="#000000">教学改进</text>
+                <text x="108" y="438" font-size="14.5" fill="#2B2B2B">反哺知识库、图谱与任务引擎</text>
+                <text x="108" y="460" font-size="13.5" fill="#5A5A5A">优化评价权重与教学设计</text>
+              </g>
+            </svg>
           </div>
         </div>
       </div>
