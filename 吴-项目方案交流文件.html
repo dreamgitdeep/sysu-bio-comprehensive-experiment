@@ -168,6 +168,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
 .tchain .st{font-size:15px;line-height:1;padding:9px 13px;border-radius:6px;background:var(--paper);border:1px solid var(--line);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(22,32,42,.05);}
 .tchain .arw{color:var(--gold);font-weight:700;font-size:17px;line-height:1;}
 
+/* Agent 矩阵卡：图标 + 名称 + 阶段标签 + 一句话定位 */
+.amlist{display:flex;flex-direction:column;gap:13px;flex:1;}
+.aitem{display:flex;gap:14px;align-items:center;padding:13px 15px;border:1px solid var(--line);border-radius:10px;background:var(--paper);flex:1;}
+.aitem .aicon{flex:0 0 46px;width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-family:var(--font-display);font-size:21px;font-weight:700;box-shadow:inset 0 -2px 0 rgba(0,0,0,.14);}
+.aitem .ameta{flex:1;min-width:0;}
+.aitem .aname{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700;line-height:1.2;}
+.aitem .astage{flex:0 0 auto;font-size:11px;font-weight:600;letter-spacing:1px;padding:2px 8px;border-radius:99px;color:#fff;white-space:nowrap;}
+.aitem .adesc{font-size:13px;color:rgba(22,32,42,.66);line-height:1.55;margin-top:5px;}
+.aicon--qa{background:var(--brand);} .aicon--lab{background:var(--ai);}
+.aicon--fb{background:var(--gold);} .aicon--ta{background:#2A3340;}
+.astage--qa{background:var(--brand);} .astage--lab{background:var(--ai);}
+.astage--fb{background:var(--gold);} .astage--ta{background:#2A3340;}
+
+/* Agent 实机演示：2×2 图位（深色底，适配透明截图，点击放大） */
+.agrid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:10px;flex:1;min-height:0;}
+.agrid .ashot{position:relative;border-radius:8px;overflow:hidden;background:#10161D;border:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:rgba(255,255,255,.42);font-size:13px;letter-spacing:1px;}
+.agrid .ashot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;cursor:zoom-in;}
+
 /* 时间轴：用于建设路径、阶段规划、流程闭环 */
 .timeline{display:grid;gap:14px;}
 .tl{position:relative;padding-left:26px;}
@@ -1075,28 +1095,58 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
 
     <div class="slide-body g-side">
       <div class="col">
-        <div class="panel" style="flex:1;">
+        <div class="panel" style="flex:1;display:flex;flex-direction:column;">
           <div class="panel-title"><span>Agent 矩阵</span><span>AGENTS</span></div>
-          <table class="table">
-            <thead><tr><th style="width:32%">Agent</th><th>角色定位 / 典型场景</th></tr></thead>
-            <tbody>
-              <tr><td><b>答疑导师 Agent</b></td><td>课前预习、课后复习：概念讲解、原理问答</td></tr>
-              <tr><td><b>实验指导 Agent</b></td><td>课中实验支持：步骤提示、操作错误识别与提醒</td></tr>
-              <tr><td><b>评价反馈 Agent</b></td><td>作业与报告评价：量规初评、改进建议</td></tr>
-              <tr><td><b>助教 Agent</b></td><td>辅助教师：学情整理、资料生成、问题归集</td></tr>
-            </tbody>
-          </table>
+          <div class="amlist">
+            <div class="aitem">
+              <div class="aicon aicon--qa">问</div>
+              <div class="ameta">
+                <div class="aname">答疑导师 Agent <span class="astage astage--qa">课前 · 课后</span></div>
+                <div class="adesc">概念讲解、原理问答，引导学生把问题想深想透</div>
+              </div>
+            </div>
+            <div class="aitem">
+              <div class="aicon aicon--lab">验</div>
+              <div class="ameta">
+                <div class="aname">实验指导 Agent <span class="astage astage--lab">课中</span></div>
+                <div class="adesc">步骤提示、操作错误识别与提醒，护航动手过程</div>
+              </div>
+            </div>
+            <div class="aitem">
+              <div class="aicon aicon--fb">评</div>
+              <div class="ameta">
+                <div class="aname">评价反馈 Agent <span class="astage astage--fb">课后</span></div>
+                <div class="adesc">作业与报告量规初评，给出可执行的改进建议</div>
+              </div>
+            </div>
+            <div class="aitem">
+              <div class="aicon aicon--ta">助</div>
+              <div class="ameta">
+                <div class="aname">助教 Agent <span class="astage astage--ta">教师侧</span></div>
+                <div class="adesc">学情整理、资料生成、问题归集，为教师减负</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="col">
-        <div class="panel" style="flex:1;">
+        <div class="panel" style="flex:none;">
           <div class="panel-title"><span>协同与边界</span><span>GOVERNANCE</span></div>
           <ul class="list">
             <li><b>Agent 间交接规则：</b>问答上下文与学情数据随请求传递；遇到成绩认定、学术诚信、实验安全或无把握答案，自动升级教师</li>
             <li><b>教师复核与介入机制：</b>关键结论与成绩相关反馈必须教师确认</li>
             <li><b>应答可靠性与责任边界：</b>回答附知识库出处，无依据时明确提示"不确定"；AI 初评仅作建议，成绩以教师复核为准</li>
           </ul>
+        </div>
+        <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+          <div class="panel-title"><span>实机演示</span><span>DEMO · 点击放大</span></div>
+          <div class="agrid">
+            <div class="ashot"><span>答疑导师 · 图位 1</span></div>
+            <div class="ashot"><span>实验指导 · 图位 2</span></div>
+            <div class="ashot"><span>评价反馈 · 图位 3</span></div>
+            <div class="ashot"><span>助教 · 图位 4</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1317,7 +1367,7 @@ var PAGES = [
   document.body.appendChild(lb);
   lb.addEventListener('click', function(){ lb.classList.remove('show'); });
   document.addEventListener('click', function(e){
-    var img = e.target && e.target.closest ? e.target.closest('.shot img, .slide-item img') : null;
+    var img = e.target && e.target.closest ? e.target.closest('.shot img, .slide-item img, .agrid img') : null;
     if (img) { lb.firstChild.src = img.src; lb.classList.add('show'); }
   });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') lb.classList.remove('show'); });
