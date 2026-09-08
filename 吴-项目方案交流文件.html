@@ -187,6 +187,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
 .agrid .ashot{position:relative;border-radius:8px;overflow:hidden;background:#10161D;border:1px solid rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:rgba(255,255,255,.42);font-size:13px;letter-spacing:1px;}
 .agrid .ashot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;cursor:zoom-in;}
+.agrid .ashot img.fit-cover{object-fit:cover;}
 
 /* 时间轴：用于建设路径、阶段规划、流程闭环 */
 .timeline{display:grid;gap:14px;}
@@ -1144,7 +1145,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
         <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
           <div class="panel-title"><span>实机演示</span><span>DEMO · 点击放大</span></div>
           <div class="agrid">
-            <div class="ashot"><span>答疑导师 · 图位 1</span></div>
+            <div class="ashot"><img class="fit-cover" src="Agent演示-答疑导师.png" alt="答疑导师 Agent 实机演示：EduClaw 平台问答入口"></div>
             <div class="ashot"><span>实验指导 · 图位 2</span></div>
             <div class="ashot"><span>评价反馈 · 图位 3</span></div>
             <div class="ashot"><span>助教 · 图位 4</span></div>
