@@ -155,6 +155,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
 .list--lg{font-size:21px;line-height:1.8;}
 .list--lg li{padding-left:18px;margin-bottom:16px;}
 
+/* 任务类型卡：色条卡片 + 阶段流程链 */
+.ttypes{display:flex;flex-direction:column;gap:14px;justify-content:center;height:calc(100% - 54px);}
+.ttype{background:var(--paper-2);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;padding:15px 18px;}
+.ttype h6{margin:0 0 12px;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:.5px;display:flex;align-items:center;gap:10px;}
+.ttype h6 em{font-style:normal;font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:1.5px;color:#fff;background:var(--brand);padding:4px 11px;border-radius:4px;}
+.ttype--base{border-left-color:var(--brand);}
+.ttype--base h6 em{background:var(--brand);}
+.ttype--inq{border-left-color:var(--ai);}
+.ttype--inq h6 em{background:var(--ai);}
+.tchain{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+.tchain .st{font-size:15px;line-height:1;padding:9px 13px;border-radius:6px;background:var(--paper);border:1px solid var(--line);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(22,32,42,.05);}
+.tchain .arw{color:var(--gold);font-weight:700;font-size:17px;line-height:1;}
+
 /* 时间轴：用于建设路径、阶段规划、流程闭环 */
 .timeline{display:grid;gap:14px;}
 .tl{position:relative;padding-left:26px;}
@@ -1009,10 +1022,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0A0E12;font-family:
       <div class="col">
         <div class="panel" style="flex:1;">
           <div class="panel-title"><span>任务类型</span><span>TYPES</span></div>
-          <ul class="list list--lg">
-            <li><b>基础实验类：</b>Pre-class Self-study + Key Points Deep-dive + Experimental Skills Training + Review &amp; Growth</li>
-            <li><b>开放探究型：</b>Determining Research Direction + Research Design + Research Results Presentation + Revising Design Plan</li>
-          </ul>
+          <div class="ttypes">
+            <div class="ttype ttype--base">
+              <h6>基础实验类<em>BASIC</em></h6>
+              <div class="tchain">
+                <span class="st">Pre-class Self-study</span><span class="arw">→</span>
+                <span class="st">Key Points Deep-dive</span><span class="arw">→</span>
+                <span class="st">Experimental Skills Training</span><span class="arw">→</span>
+                <span class="st">Review &amp; Growth</span>
+              </div>
+            </div>
+            <div class="ttype ttype--inq">
+              <h6>开放探究型<em>INQUIRY</em></h6>
+              <div class="tchain">
+                <span class="st">Determining Research Direction</span><span class="arw">→</span>
+                <span class="st">Research Design</span><span class="arw">→</span>
+                <span class="st">Research Results Presentation</span><span class="arw">→</span>
+                <span class="st">Revising Design Plan</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
