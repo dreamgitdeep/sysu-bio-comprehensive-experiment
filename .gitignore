@@ -13,5 +13,8 @@ _原始备份.html
 *deck-backup-*.html
 versions/
 
+# WorkBuddy 本地项目管理数据（含记忆日志，勿推送）
+.workbuddy/
+
 # 素材原文体积较大时，可取消下一行注释改为只同步成品
 # 素材文本/
