@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《生物科学综合实验》人机协作课程建设方案 · 文档导航</title>
+<style>
+:root{
+  --brand:#8E1D26;
+  --brand-deep:#4E0F16;
+  --gold:#C9A45B;
+  --gold-soft:#E8D3A6;
+  --paper:#FFFFFF;
+  --paper-2:#F6F6F4;
+  --ink:#16202A;
+  --ink-2:#4A5A68;
+  --ink-3:#8A97A3;
+  --line:rgba(22,32,42,.12);
+  --line-2:rgba(22,32,42,.22);
+  --ai:#1F5F73;
+  --font-sans:'Microsoft YaHei','微软雅黑','PingFang SC','Hiragino Sans GB',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--font-sans);
+  background:var(--paper-2);
+  color:var(--ink);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+
+/* ---------- 顶部 ---------- */
+.hero{
+  background:linear-gradient(135deg,var(--brand-deep) 0%,var(--brand) 55%,#A3303A 100%);
+  color:#fff;
+  padding:56px 32px 48px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::after{
+  content:"";
+  position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 82% 18%,rgba(201,164,91,.28),transparent 42%),
+    radial-gradient(circle at 12% 88%,rgba(201,164,91,.16),transparent 46%);
+  pointer-events:none;
+}
+.hero-inner{max-width:1040px;margin:0 auto;position:relative;z-index:1}
+.badge{
+  display:inline-block;
+  font-size:12px;letter-spacing:.16em;
+  color:var(--gold-soft);
+  border:1px solid rgba(232,211,166,.45);
+  border-radius:999px;
+  padding:5px 14px;
+  margin-bottom:20px;
+}
+.hero h1{
+  font-size:34px;font-weight:700;letter-spacing:.02em;
+  line-height:1.35;margin-bottom:12px;
+}
+.hero .sub{font-size:15px;color:rgba(255,255,255,.8)}
+.hero .rule{
+  width:64px;height:3px;background:var(--gold);
+  margin:22px 0 0;border-radius:2px;
+}
+
+/* ---------- 主体 ---------- */
+.wrap{max-width:1040px;margin:0 auto;padding:40px 32px 72px}
+.sec-title{
+  font-size:13px;letter-spacing:.14em;color:var(--ink-3);
+  font-weight:700;margin:0 0 16px;
+  display:flex;align-items:center;gap:10px;
+}
+.sec-title::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* 主推卡片 */
+.lead{
+  display:block;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-left:4px solid var(--brand);
+  border-radius:12px;
+  padding:26px 28px;
+  margin-bottom:36px;
+  box-shadow:0 2px 12px rgba(22,32,42,.05);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.lead:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(142,29,38,.14);border-left-color:var(--gold)}
+.lead .tag{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;
+  background:rgba(142,29,38,.08);color:var(--brand);
+  padding:4px 10px;border-radius:4px;margin-bottom:12px;
+}
+.lead h2{font-size:21px;margin-bottom:8px;color:var(--brand-deep)}
+.lead p{font-size:14px;color:var(--ink-2);margin-bottom:16px}
+.lead .meta{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;color:var(--ink-3)}
+.lead .meta b{color:var(--ink);font-weight:600}
+.go{color:var(--brand);font-weight:700;font-size:14px}
+
+/* 网格卡片 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:38px}
+.card{
+  display:flex;flex-direction:column;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:20px 22px;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(22,32,42,.1);border-color:var(--line-2)}
+.card .k{
+  font-size:11px;letter-spacing:.1em;font-weight:700;
+  color:var(--ai);margin-bottom:9px;
+}
+.card h3{font-size:16px;margin-bottom:7px;line-height:1.45}
+.card p{font-size:13px;color:var(--ink-2);flex:1;margin-bottom:12px}
+.card .f{font-size:12px;color:var(--ink-3);font-family:Consolas,Monaco,monospace;word-break:break-all}
+
+/* 素材列表 */
+.files{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:38px}
+.files a{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;border-bottom:1px solid var(--line);
+  font-size:14px;transition:background .15s ease;
+}
+.files a:last-child{border-bottom:none}
+.files a:hover{background:var(--paper-2)}
+.files .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.files .n{color:var(--ink)}
+.files .d{margin-left:auto;font-size:12px;color:var(--ink-3)}
+
+/* 工作流 */
+.flow{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:24px 26px}
+.flow ol{margin-left:20px;font-size:14px;color:var(--ink-2)}
+.flow li{margin-bottom:10px}
+.flow li:last-child{margin-bottom:0}
+.flow code{
+  font-family:Consolas,Monaco,monospace;font-size:13px;
+  background:var(--paper-2);border:1px solid var(--line);
+  border-radius:4px;padding:2px 7px;color:var(--brand);
+}
+.flow b{color:var(--ink)}
+
+footer{
+  border-top:1px solid var(--line);
+  padding:22px 32px;text-align:center;
+  font-size:12.5px;color:var(--ink-3);
+}
+footer a{color:var(--brand);font-weight:600}
+
+@media (max-width:640px){
+  .hero{padding:40px 20px 32px}
+  .hero h1{font-size:25px}
+  .wrap{padding:28px 20px 48px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="badge">SUN YAT-SEN UNIVERSITY · 课程建设</span>
+    <h1>《生物科学综合实验》<br>人机协作课程建设方案</h1>
+    <p class="sub">中山大学 · 项目资料导航 —— 所有文档均保存在 GitHub，支持在线预览与多设备同步</p>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <p class="sec-title">核心文档</p>
+
+  <a class="lead" href="吴-项目方案交流文件.html">
+    <span class="tag">主方案 · 演示文稿</span>
+    <h2>项目方案交流文件</h2>
+    <p>面向项目沟通的完整方案演示。支持 ← / → 或空格翻页、F 全屏、底部圆点跳页、一键导出 PDF。</p>
+    <div class="meta">
+      <span>格式 <b>单页 HTML 演示</b></span>
+      <span>交互 <b>键盘翻页 / 全屏 / 打印</b></span>
+      <span class="go">立即打开 →</span>
+    </div>
+  </a>
+
+  <p class="sec-title">配套文档</p>
+
+  <div class="grid">
+    <a class="card" href="内容大纲-待填清单.md">
+      <span class="k">CHECKLIST</span>
+      <h3>内容大纲 · 待填清单</h3>
+      <p>方案各章节的内容缺口与待补充事项，逐项对照填写。</p>
+      <span class="f">内容大纲-待填清单.md</span>
+    </a>
+  </div>
+
+  <p class="sec-title">原始素材</p>
+
+  <div class="files">
+    <a href="素材文本/src-建设方案汇报PPT.txt"><span class="dot"></span><span class="n">建设方案汇报 PPT</span><span class="d">5.5 KB</span></a>
+    <a href="素材文本/src-规划方案建议.txt"><span class="dot"></span><span class="n">规划方案建议</span><span class="d">35 KB</span></a>
+    <a href="素材文本/src-一轮诊断报告.txt"><span class="dot"></span><span class="n">一轮诊断报告</span><span class="d">882 B</span></a>
+    <a href="素材文本/src-课程诊断.txt"><span class="dot"></span><span class="n">课程诊断</span><span class="d">1.5 KB</span></a>
+  </div>
+
+  <p class="sec-title">多设备同步工作流</p>
+
+  <div class="flow">
+    <ol>
+      <li><b>换到新电脑</b>：安装 Git 后执行 <code>git clone https://github.com/dreamgitdeep/sysu-bio-comprehensive-experiment.git</code></li>
+      <li><b>开始工作前</b>：先 <code>git pull</code> 拉取最新版本，避免覆盖他人改动</li>
+      <li><b>本地预览</b>：双击 <code>preview.cmd</code>（或执行 <code>python -m http.server 8000</code>）</li>
+      <li><b>改完后提交</b>：<code>sync.cmd "本次改了什么"</code>，自动完成 add / commit / push</li>
+      <li><b>约 1 分钟后</b>：GitHub Pages 自动更新，在线链接即可看到最新版本</li>
+    </ol>
+  </div>
+
+</main>
+
+<footer>
+  <a href="https://github.com/dreamgitdeep/sysu-bio-comprehensive-experiment">GitHub 仓库</a> · 本页由 GitHub Pages 自动发布，随推送更新
+</footer>
+
+</body>
+</html>
